@@ -2,14 +2,26 @@ use std::collections::HashMap;
 
 pub fn solve(part2: bool) -> String {
     let rotations = load_rotations();
-    solve_1(rotations).to_string()
+    if part2 {
+        solve_2(rotations).to_string()
+    } else {
+        solve_1(rotations).to_string()
+    }
 }
 
-fn solve_1(rotations: Vec<i128>) -> usize {
+fn solve_1(rotations: Vec<i128>) -> u128 {
     apply_rotations(rotations, 50)
         .iter()
         .filter(|&&x| x == 0)
         .count()
+        .try_into()
+        .unwrap()
+}
+
+fn solve_2(rotations: Vec<i128>) -> u128 {
+    let exact_zeros = solve_1(rotations.clone());
+    let skipped_zeros: u128 = apply_rotations_skipped_zeros(rotations, 50).iter().sum();
+    exact_zeros + skipped_zeros
 }
 
 fn load_rotations() -> Vec<i128> {
@@ -43,7 +55,7 @@ fn apply_rotations(rotations: Vec<i128>, mut init: i128) -> Vec<i128> {
         .collect()
 }
 
-fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<i128> {
+fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<u128> {
     rotations
         .iter()
         .map(|&rot| {
@@ -51,9 +63,13 @@ fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<i1
             let next_raw = init + rot;
             let next = next_raw.rem_euclid(100);
             let sign_change = next_raw > 100 || next_raw < 0;
-            let skips = if sign_change && prev != 0 && next != 0 { 1 } else { 0 };
+            let skips: u128 = if sign_change && prev != 0 && next != 0 {
+                1
+            } else {
+                0
+            };
             init = next;
-            skips + (rot.abs()-1).div_euclid(100)
+            skips + (rot.unsigned_abs() - 1).div_euclid(100)
         })
         .collect()
 }
@@ -100,11 +116,16 @@ fn test_apply_rotations_skipped_zeros_full_rotations_backwards() {
     assert_eq!(skips, vec![10]);
 }
 
-
 #[test]
 fn test_solve_part_1_test() {
     let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
     assert_eq!(solve_1(test_rotations), 3);
+}
+
+#[test]
+fn test_solve_part_2_test() {
+    let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
+    assert_eq!(solve_2(test_rotations), 6);
 }
 
 #[test]
