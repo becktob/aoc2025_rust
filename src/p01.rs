@@ -121,6 +121,29 @@ fn test_apply_rotations_skipped_zeros_full_rotations_backwards() {
 }
 
 #[test]
+fn test_apply_rotations_skipped_zeros_full_rotations_from_zero() {
+    assert_eq!(apply_rotations_skipped_zeros(Vec::from([999]), 0), vec![9]);
+    assert_eq!(apply_rotations_skipped_zeros(Vec::from([1000]), 0), vec![9]);
+    assert_eq!(
+        apply_rotations_skipped_zeros(Vec::from([1001]), 0),
+        vec![10]
+    );
+}
+
+#[test]
+fn test_apply_rotations_skipped_zeros_full_rotations_backwards_from_zero() {
+    assert_eq!(apply_rotations_skipped_zeros(Vec::from([-999]), 0), vec![9]);
+    assert_eq!(
+        apply_rotations_skipped_zeros(Vec::from([-1000]), 0),
+        vec![9]
+    );
+    assert_eq!(
+        apply_rotations_skipped_zeros(Vec::from([-1001]), 0),
+        vec![10]
+    );
+}
+
+#[test]
 fn test_solve_part_1_test() {
     let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
     assert_eq!(solve_1(test_rotations), 3);
@@ -133,6 +156,23 @@ fn test_solve_part_2_test() {
 }
 
 #[test]
+fn test_solve_part_2_close_cases() {
+    assert_eq!(solve_2(Vec::from([149])), 1);
+    assert_eq!(solve_2(Vec::from([150])), 2);
+    assert_eq!(solve_2(Vec::from([151])), 2);
+
+    assert_eq!(solve_2(Vec::from([-149])), 1);
+    assert_eq!(solve_2(Vec::from([-150])), 2);
+    assert_eq!(solve_2(Vec::from([-151])), 2);
+}
+
+#[test]
 fn test_solve_part_1() {
     assert_eq!(solve(false), "984");
+}
+
+#[test]
+fn test_solve_part_2() {
+    let rotations = load_rotations();
+    assert_eq!(solve_2(rotations), 5847); // 5847 too high
 }
