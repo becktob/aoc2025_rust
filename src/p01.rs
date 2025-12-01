@@ -43,6 +43,21 @@ fn apply_rotations(rotations: Vec<i128>, mut init: i128) -> Vec<i128> {
         .collect()
 }
 
+fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<i128> {
+    rotations
+        .iter()
+        .map(|&rot| {
+            let prev = init;
+            let next_raw = init + rot;
+            let next = next_raw.rem_euclid(100);
+            let sign_change = next_raw > 100 || next_raw < 0;
+            let skips = if sign_change && prev != 0 && next != 0 { 1 } else { 0 };
+            init = next;
+            skips
+        })
+        .collect()
+}
+
 #[test]
 fn test_load_rotations() {
     let rotations = load_rotations();
@@ -63,6 +78,14 @@ fn test_apply_rotations() {
     let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
     let sequence = apply_rotations(test_rotations, state);
     assert_eq!(sequence, vec![82, 52, 0, 95, 55, 0, 99, 0, 14, 32]);
+}
+
+#[test]
+fn test_apply_rotations_skipped_zeros() {
+    let state = 50;
+    let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
+    let skips = apply_rotations_skipped_zeros(test_rotations, state);
+    assert_eq!(skips, vec![1, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 }
 
 #[test]
