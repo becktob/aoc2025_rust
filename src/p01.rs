@@ -53,7 +53,7 @@ fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<i1
             let sign_change = next_raw > 100 || next_raw < 0;
             let skips = if sign_change && prev != 0 && next != 0 { 1 } else { 0 };
             init = next;
-            skips
+            skips + (rot.abs()-1).div_euclid(100)
         })
         .collect()
 }
@@ -87,6 +87,19 @@ fn test_apply_rotations_skipped_zeros() {
     let skips = apply_rotations_skipped_zeros(test_rotations, state);
     assert_eq!(skips, vec![1, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 }
+
+#[test]
+fn test_apply_rotations_skipped_zeros_full_rotations() {
+    let skips = apply_rotations_skipped_zeros(Vec::from([1000]), 50);
+    assert_eq!(skips, vec![10]);
+}
+
+#[test]
+fn test_apply_rotations_skipped_zeros_full_rotations_backwards() {
+    let skips = apply_rotations_skipped_zeros(Vec::from([-1000]), 50);
+    assert_eq!(skips, vec![10]);
+}
+
 
 #[test]
 fn test_solve_part_1_test() {
