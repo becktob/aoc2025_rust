@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 
 pub fn solve(part2: bool) -> String {
-    42.to_string()
+    let rotations = load_rotations();
+    apply_rotations(rotations, 50)
+        .iter()
+        .filter(|&&x| x == 0)
+        .count()
+        .to_string()
 }
 
 fn load_rotations() -> Vec<i128> {
@@ -55,4 +60,9 @@ fn test_apply_rotations() {
     let rotations = Vec::from([-68, -30, 48]);
     let sequence = apply_rotations(rotations, state);
     assert_eq!(sequence, vec![82, 52, 0]);
+}
+
+#[test]
+fn test_solve_part_1() {
+    assert_eq!(solve(false), "984");
 }
