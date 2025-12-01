@@ -2,11 +2,14 @@ use std::collections::HashMap;
 
 pub fn solve(part2: bool) -> String {
     let rotations = load_rotations();
+    solve_1(rotations).to_string()
+}
+
+fn solve_1(rotations: Vec<i128>) -> usize {
     apply_rotations(rotations, 50)
         .iter()
         .filter(|&&x| x == 0)
         .count()
-        .to_string()
 }
 
 fn load_rotations() -> Vec<i128> {
@@ -57,9 +60,15 @@ fn test_parse_rotation() {
 #[test]
 fn test_apply_rotations() {
     let state = 50;
-    let rotations = Vec::from([-68, -30, 48]);
-    let sequence = apply_rotations(rotations, state);
-    assert_eq!(sequence, vec![82, 52, 0]);
+    let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
+    let sequence = apply_rotations(test_rotations, state);
+    assert_eq!(sequence, vec![82, 52, 0, 95, 55, 0, 99, 0, 14, 32]);
+}
+
+#[test]
+fn test_solve_part_1_test() {
+    let test_rotations = Vec::from([-68, -30, 48, -5, 60, -55, -1, -99, 14, -82]);
+    assert_eq!(solve_1(test_rotations), 3);
 }
 
 #[test]
