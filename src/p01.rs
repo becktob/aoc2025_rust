@@ -72,8 +72,10 @@ fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<u1
             } else {
                 0
             };
+            let zero_to_zero = prev == 0 && next == 0;
+            let fix = if zero_to_zero { -1 } else { 0 }; // full turns from zero to zero are counted twice in part 1 already
             init = next;
-            skips + full_turns.unsigned_abs()
+            skips + (full_turns + fix).unsigned_abs()
         })
         .collect()
 }
