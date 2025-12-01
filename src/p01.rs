@@ -58,18 +58,22 @@ fn apply_rotations(rotations: Vec<i128>, mut init: i128) -> Vec<i128> {
 fn apply_rotations_skipped_zeros(rotations: Vec<i128>, mut init: i128) -> Vec<u128> {
     rotations
         .iter()
-        .map(|&rot| {
+        .map(|&rot_raw| {
+            let full_turns = rot_raw.abs().div_euclid(100);
+            let rot = rot_raw - 100 * full_turns * rot_raw.signum();
+
             let prev = init;
             let next_raw = init + rot;
             let next = next_raw.rem_euclid(100);
+
             let sign_change = next_raw > 100 || next_raw < 0;
-            let skips: u128 = if sign_change && prev != 0 && next != 0 {
+            let skips = if sign_change && prev != 0 && next != 0 {
                 1
             } else {
                 0
             };
             init = next;
-            skips + (rot.unsigned_abs() - 1).div_euclid(100)
+            skips + full_turns.unsigned_abs()
         })
         .collect()
 }
