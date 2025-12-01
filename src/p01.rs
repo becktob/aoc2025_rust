@@ -175,6 +175,5 @@ fn test_solve_part_1() {
 
 #[test]
 fn test_solve_part_2() {
-    let rotations = load_rotations();
-    assert_eq!(solve_2(rotations), 5847); // 5847 too high
+    assert_eq!(solve(true), "5657");
 }
