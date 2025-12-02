@@ -7,7 +7,11 @@ pub fn solve(part2: bool) -> String {
 }
 
 fn solve_1(input: &str) -> u32 {
-    parse_ranges(input).into_iter().map(invalid_in_range).map(|v| v.iter().sum::<u32>()).sum()
+    parse_ranges(input)
+        .into_iter()
+        .map(invalid_in_range)
+        .map(|v| v.iter().sum::<u32>())
+        .sum()
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -21,7 +25,10 @@ fn parse_ranges(line: &str) -> Vec<Range> {
     ranges
         .map(|s| {
             let ids: Vec<u32> = s.split('-').map(|s| s.parse().unwrap()).collect();
-            Range { first: *ids.first().unwrap(), last: *ids.last().unwrap() }
+            Range {
+                first: *ids.first().unwrap(),
+                last: *ids.last().unwrap(),
+            }
         })
         .collect()
 }
@@ -38,7 +45,9 @@ fn invalid(id: u32) -> bool {
 }
 
 fn invalid_in_range(range: Range) -> Vec<u32> {
-    (range.first..=range.last+1).filter(|&n| invalid(n)).collect()
+    (range.first..=range.last + 1)
+        .filter(|&n| invalid(n))
+        .collect()
 }
 
 #[test]
@@ -61,17 +70,34 @@ static EXAMPLE: &str = "11-22,95-115,998-1012,1188511880-1188511890,222220-22222
 #[test]
 fn test_parse() {
     let parsed_example = parse_ranges(EXAMPLE);
-
-    assert_eq!(*parsed_example.first().unwrap(), Range { first: 11, last: 22 });
-    assert_eq!(*parsed_example.last().unwrap(), Range { first: 2121212118, last: 2121212124 });
+    
+    assert_eq!(
+        *parsed_example.last().unwrap(),
+        Range {
+            first: 2121212118,
+            last: 2121212124
+        }
+    );
 }
 
 #[test]
-fn test_invalid_in_range(){
-    assert_eq!(invalid_in_range(Range{ first: 998, last: 1010 }), vec![1010]);
-    assert_eq!(invalid_in_range(Range{ first: 38593856, last: 38593862 }), vec![38593859]);
+fn test_invalid_in_range() {
+    let range = Range {
+        first: 38593856,
+        last: 38593862,
+    };
+    assert_eq!(invalid_in_range(range), vec![38593859]);
 }
 #[test]
-fn test_solve_1_example(){
+fn test_invalid_in_range_end() {
+    let range = Range {
+        first: 998,
+        last: 1010,
+    };
+    assert_eq!(invalid_in_range(range), vec![1010]);
+}
+
+#[test]
+fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 1227775554);
 }
