@@ -33,6 +33,10 @@ fn invalid(id: u32) -> bool {
     first == last
 }
 
+fn invalid_in_range(range: &Range) -> Vec<u32> {
+    (range.first..=range.last+1).filter(|&n| invalid(n)).collect()
+}
+
 #[test]
 fn test_invalid() {
     assert_eq!(invalid(1), false);
@@ -56,4 +60,10 @@ fn test_parse() {
 
     assert_eq!(*parsed_example.first().unwrap(), Range { first: 11, last: 22 });
     assert_eq!(*parsed_example.last().unwrap(), Range { first: 2121212118, last: 2121212124 });
+}
+
+#[test]
+fn test_invalid_in_range(){
+    assert_eq!(invalid_in_range(&Range{ first: 998, last: 1010 }), vec![1010]);
+    assert_eq!(invalid_in_range(&Range{ first: 38593856, last: 38593862 }), vec![38593859]);
 }
