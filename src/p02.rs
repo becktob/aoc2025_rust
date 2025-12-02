@@ -1,30 +1,31 @@
 pub fn solve(part2: bool) -> String {
+    let input = std::fs::read_to_string("input_02.txt").expect("could not read file");
     if part2 {
         "wip".to_string()
     } else {
-        "wip".to_string()
+        solve_1(&input).to_string()
     }
 }
 
-fn solve_1(input: &str) -> u32 {
+fn solve_1(input: &str) -> u64 {
     parse_ranges(input)
         .into_iter()
         .map(invalid_in_range)
-        .map(|v| v.iter().sum::<u32>())
+        .map(|v| v.iter().sum::<u64>())
         .sum()
 }
 
 #[derive(Debug, Eq, PartialEq)]
 struct Range {
-    first: u32,
-    last: u32,
+    first: u64,
+    last: u64,
 }
 
 fn parse_ranges(line: &str) -> Vec<Range> {
-    let ranges = line.split(',');
+    let ranges = line.trim().split(',');
     ranges
         .map(|s| {
-            let ids: Vec<u32> = s.split('-').map(|s| s.parse().unwrap()).collect();
+            let ids: Vec<u64> = s.split('-').map(|s| s.parse().unwrap()).collect();
             Range {
                 first: *ids.first().unwrap(),
                 last: *ids.last().unwrap(),
@@ -33,10 +34,10 @@ fn parse_ranges(line: &str) -> Vec<Range> {
         .collect()
 }
 
-fn invalid(id: u32) -> bool {
+fn invalid(id: u64) -> bool {
     let n_digits: u32 = id.to_string().len().try_into().unwrap(); // Speedup with log?
 
-    let middle_digit_value = 10u32.pow(n_digits / 2);
+    let middle_digit_value = 10u64.pow(n_digits / 2);
 
     let first = id / middle_digit_value;
     let last = id % middle_digit_value;
@@ -44,7 +45,7 @@ fn invalid(id: u32) -> bool {
     first == last
 }
 
-fn invalid_in_range(range: Range) -> Vec<u32> {
+fn invalid_in_range(range: Range) -> Vec<u64> {
     (range.first..=range.last + 1)
         .filter(|&n| invalid(n))
         .collect()
@@ -70,7 +71,7 @@ static EXAMPLE: &str = "11-22,95-115,998-1012,1188511880-1188511890,222220-22222
 #[test]
 fn test_parse() {
     let parsed_example = parse_ranges(EXAMPLE);
-    
+
     assert_eq!(
         *parsed_example.last().unwrap(),
         Range {
@@ -100,4 +101,10 @@ fn test_invalid_in_range_end() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 1227775554);
+}
+
+#[test]
+fn test_solve_1() {
+    let input = std::fs::read_to_string("input_02.txt").expect("could not read file");
+    assert_eq!(solve_1(&input), 8576933996);
 }
