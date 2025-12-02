@@ -6,6 +6,10 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> u32 {
+    parse_ranges(input).into_iter().map(invalid_in_range).map(|v| v.iter().sum::<u32>()).sum()
+}
+
 #[derive(Debug, Eq, PartialEq)]
 struct Range {
     first: u32,
@@ -33,7 +37,7 @@ fn invalid(id: u32) -> bool {
     first == last
 }
 
-fn invalid_in_range(range: &Range) -> Vec<u32> {
+fn invalid_in_range(range: Range) -> Vec<u32> {
     (range.first..=range.last+1).filter(|&n| invalid(n)).collect()
 }
 
@@ -64,6 +68,10 @@ fn test_parse() {
 
 #[test]
 fn test_invalid_in_range(){
-    assert_eq!(invalid_in_range(&Range{ first: 998, last: 1010 }), vec![1010]);
-    assert_eq!(invalid_in_range(&Range{ first: 38593856, last: 38593862 }), vec![38593859]);
+    assert_eq!(invalid_in_range(Range{ first: 998, last: 1010 }), vec![1010]);
+    assert_eq!(invalid_in_range(Range{ first: 38593856, last: 38593862 }), vec![38593859]);
+}
+#[test]
+fn test_solve_1_example(){
+    assert_eq!(solve_1(EXAMPLE), 1227775554);
 }
