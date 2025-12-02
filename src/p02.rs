@@ -15,6 +15,14 @@ fn solve_1(input: &str) -> u64 {
         .sum()
 }
 
+fn solve_2(input: &str) -> u64 {
+    parse_ranges(input)
+        .into_iter()
+        .map(invalid_in_range_2)
+        .map(|v| v.iter().sum::<u64>())
+        .sum()
+}
+
 #[derive(Debug, Eq, PartialEq)]
 struct Range {
     first: u64,
@@ -45,9 +53,38 @@ fn invalid(id: u64) -> bool {
     first == last
 }
 
+fn invalid_part_2(id: u64) -> bool {
+    let digits = id.to_string();
+    let n_digits: u32 = digits.len().try_into().unwrap(); // Speedup with log?
+
+    for sequence_len in 1..n_digits {
+        let mut chunks = digits
+            .as_bytes()
+            .chunks_exact(sequence_len.try_into().unwrap());
+        if chunks.remainder().len() > 0 {
+            // seq_len does not divide n_digits (could check before chunking)
+            continue;
+        }
+
+        let first = chunks.next().unwrap();
+        let all_same = chunks.into_iter().all(|c| c == first);
+
+        if all_same {
+            return true;
+        }
+    }
+    false
+}
+
 fn invalid_in_range(range: Range) -> Vec<u64> {
     (range.first..=range.last + 1)
         .filter(|&n| invalid(n))
+        .collect()
+}
+
+fn invalid_in_range_2(range: Range) -> Vec<u64> {
+    (range.first..=range.last + 1)
+        .filter(|&n| invalid_part_2(n))
         .collect()
 }
 
@@ -63,6 +100,18 @@ fn test_invalid() {
     assert_eq!(invalid(1010), true);
 
     assert_eq!(invalid(1188511885), true);
+}
+
+#[test]
+fn test_invalid_part_2() {
+    assert_eq!(invalid_part_2(12341234), true);
+    assert_eq!(invalid_part_2(12341230), false);
+
+    assert_eq!(invalid_part_2(123123123), true);
+    assert_eq!(invalid_part_2(123123120), false);
+
+    assert_eq!(invalid_part_2(1111111), true);
+    assert_eq!(invalid_part_2(1110111), false);
 }
 
 #[cfg(test)]
@@ -107,4 +156,9 @@ fn test_solve_1_example() {
 fn test_solve_1() {
     let input = std::fs::read_to_string("input_02.txt").expect("could not read file");
     assert_eq!(solve_1(&input), 8576933996);
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 4174379265);
 }
