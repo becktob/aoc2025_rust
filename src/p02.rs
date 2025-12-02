@@ -1,7 +1,7 @@
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_02.txt").expect("could not read file");
     if part2 {
-        "wip".to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -54,22 +54,19 @@ fn invalid(id: u64) -> bool {
 }
 
 fn invalid_part_2(id: u64) -> bool {
-    let digits = id.to_string();
-    let n_digits: u32 = digits.len().try_into().unwrap(); // Speedup with log?
+    let string = id.to_string();
+    let digits = string.as_bytes();
+    let n_digits = digits.len();
 
-    for sequence_len in 1..n_digits {
-        let mut chunks = digits
-            .as_bytes()
-            .chunks_exact(sequence_len.try_into().unwrap());
-        if chunks.remainder().len() > 0 {
-            // seq_len does not divide n_digits (could check before chunking)
+    let max_seq_len = n_digits / 2;
+    for sequence_len in 1..max_seq_len + 1 {
+        if n_digits % sequence_len != 0 {
             continue;
         }
 
+        let mut chunks = digits.chunks_exact(sequence_len);
         let first = chunks.next().unwrap();
-        let all_same = chunks.into_iter().all(|c| c == first);
-
-        if all_same {
+        if chunks.into_iter().all(|c| c == first) {
             return true;
         }
     }
