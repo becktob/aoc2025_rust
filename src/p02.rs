@@ -162,3 +162,9 @@ fn test_solve_1() {
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 4174379265);
 }
+
+#[test]
+fn test_solve_2() {
+    let input = std::fs::read_to_string("input_02.txt").expect("could not read file");
+    assert_eq!(solve_2(&input), 25663320831);
+}
