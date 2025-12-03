@@ -7,21 +7,43 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
-fn solve_1(input: &str) -> u32 {
+fn solve_1(input: &str) -> u64 {
     input.lines().map(parse_bank).map(max_joltage).sum()
 }
 
-type Bank = Vec<u32>;
+type Bank = Vec<u64>;
 
 fn parse_bank(bank: &str) -> Bank {
-    bank.chars().map(|b| b.to_digit(10).unwrap()).collect()
+    bank.chars()
+        .map(|b| b.to_digit(10).unwrap().into())
+        .collect()
 }
 
-fn max_joltage(bank: Bank) -> u32 {
-    let first = bank[..bank.len() - 1].iter().max().unwrap();
-    let where_first = bank.iter().position(|&x| x == *first).unwrap();
-    let second = bank.iter().skip(where_first + 1).max().unwrap();
-    10 * first + second
+fn max_joltage(bank: Bank) -> u64 {
+    max_joltage_override(bank, 2)
+}
+
+fn max_joltage_override(bank: Bank, num_batteries: usize) -> u64 {
+    let mut digits: Vec<u64> = Vec::new();
+    let mut leftmost_possible_battery = 0;
+
+    for pos in 0..num_batteries {
+        let num_batteries_still_to_find = num_batteries - pos - 1;
+        let largest_digit = bank[..bank.len() - num_batteries_still_to_find]
+            .iter()
+            .skip(leftmost_possible_battery)
+            .max()
+            .unwrap();
+        digits.push(*largest_digit);
+        leftmost_possible_battery = bank.iter().position(|&x| x == *largest_digit).unwrap() + 1;
+    }
+
+    digits
+        .iter()
+        .rev()
+        .enumerate()
+        .map(|(i, &x)| x as u64 * 10u64.pow(i as u32))
+        .sum()
 }
 
 #[test]
@@ -40,6 +62,12 @@ fn test_max_joltage_largest_digit_at_end() {
 fn test_max_joltage_largest_digit_repeats() {
     let bank2 = parse_bank("9988");
     assert_eq!(max_joltage(bank2), 99);
+}
+
+#[test]
+fn test_max_joltage_override() {
+    let bank = parse_bank("987654321111111");
+    assert_eq!(max_joltage_override(bank, 12), 987654321111);
 }
 
 #[cfg(test)]
