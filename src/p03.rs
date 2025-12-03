@@ -7,9 +7,13 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
-type Bank = Vec<u16>;
+type Bank = Vec<u32>;
 
-fn max_joltage(bank: Bank) -> u16 {
+fn parse_bank(bank: &str) -> Bank {
+    bank.chars().map(|b| b.to_digit(10).unwrap()).collect()
+}
+
+fn max_joltage(bank: Bank) -> u32 {
     let (where_first, first) = bank
         .iter()
         .enumerate()
@@ -21,6 +25,6 @@ fn max_joltage(bank: Bank) -> u16 {
 
 #[test]
 fn test_max_joltage() {
-    let bank = vec![9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-    assert_eq!(max_joltage(bank), 98)
+    let bank = parse_bank("987654321111111");
+    assert_eq!(max_joltage(bank), 98);
 }
