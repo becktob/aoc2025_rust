@@ -43,8 +43,13 @@ fn max_joltage_override(bank: Bank, num_batteries: usize) -> u64 {
             .max()
             .unwrap();
         digits.push(*largest_digit);
-        let where_largest_digit_from_leftmost = bank.iter().skip(leftmost_possible_battery).position(|&x| x == *largest_digit).unwrap();
-        leftmost_possible_battery = where_largest_digit_from_leftmost + leftmost_possible_battery + 1;
+        let where_largest_digit_from_leftmost = bank
+            .iter()
+            .skip(leftmost_possible_battery)
+            .position(|&x| x == *largest_digit)
+            .unwrap();
+        leftmost_possible_battery =
+            where_largest_digit_from_leftmost + leftmost_possible_battery + 1;
     }
 
     digits
@@ -100,10 +105,16 @@ fn test_solve_1_example() {
 fn test_solve_1() {
     let input = std::fs::read_to_string("input_03.txt").expect("could not read file");
     assert_eq!(input.lines().count(), 200);
-    assert_eq!(solve_1(&input), 17316); // 17125 low
+    assert_eq!(solve_1(&input), 17316);
 }
 
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 3121910778619);
+}
+
+#[test]
+fn test_solve_2() {
+    let input = std::fs::read_to_string("input_03.txt").expect("could not read file");
+    assert_eq!(solve_2(&input), 171741365473332);
 }
