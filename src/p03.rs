@@ -14,7 +14,7 @@ fn parse_bank(bank: &str) -> Bank {
 }
 
 fn max_joltage(bank: Bank) -> u32 {
-    let (where_first, first) = bank
+    let (where_first, first) = bank[..bank.len() - 1]
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -27,4 +27,10 @@ fn max_joltage(bank: Bank) -> u32 {
 fn test_max_joltage() {
     let bank = parse_bank("987654321111111");
     assert_eq!(max_joltage(bank), 98);
+}
+
+#[test]
+fn test_max_joltage_largest_digit_at_end() {
+    let bank2 = parse_bank("811111111111119");
+    assert_eq!(max_joltage(bank2), 89);
 }
