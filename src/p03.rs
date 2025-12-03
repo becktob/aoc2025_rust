@@ -7,6 +7,10 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> u32 {
+    input.lines().map(parse_bank).map(max_joltage).sum()
+}
+
 type Bank = Vec<u32>;
 
 fn parse_bank(bank: &str) -> Bank {
@@ -33,4 +37,15 @@ fn test_max_joltage() {
 fn test_max_joltage_largest_digit_at_end() {
     let bank2 = parse_bank("811111111111119");
     assert_eq!(max_joltage(bank2), 89);
+}
+#[cfg(test)]
+static EXAMPLE: &str = "987654321111111
+811111111111119
+234234234234278
+818181911112111
+";
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 357);
 }
