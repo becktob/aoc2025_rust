@@ -11,6 +11,14 @@ fn solve_1(input: &str) -> u64 {
     input.lines().map(parse_bank).map(max_joltage).sum()
 }
 
+fn solve_2(input: &str) -> u64 {
+    input
+        .lines()
+        .map(parse_bank)
+        .map(|b| max_joltage_override(b, 12))
+        .sum()
+}
+
 type Bank = Vec<u64>;
 
 fn parse_bank(bank: &str) -> Bank {
@@ -35,7 +43,8 @@ fn max_joltage_override(bank: Bank, num_batteries: usize) -> u64 {
             .max()
             .unwrap();
         digits.push(*largest_digit);
-        leftmost_possible_battery = bank.iter().position(|&x| x == *largest_digit).unwrap() + 1;
+        let where_largest_digit_from_leftmost = bank.iter().skip(leftmost_possible_battery).position(|&x| x == *largest_digit).unwrap();
+        leftmost_possible_battery = where_largest_digit_from_leftmost + leftmost_possible_battery + 1;
     }
 
     digits
@@ -70,6 +79,12 @@ fn test_max_joltage_override() {
     assert_eq!(max_joltage_override(bank, 12), 987654321111);
 }
 
+#[test]
+fn test_max_joltage_override_2() {
+    let bank = parse_bank("234234234234278");
+    assert_eq!(max_joltage_override(bank, 12), 434234234278);
+}
+
 #[cfg(test)]
 static EXAMPLE: &str = "987654321111111
 811111111111119
@@ -86,4 +101,9 @@ fn test_solve_1() {
     let input = std::fs::read_to_string("input_03.txt").expect("could not read file");
     assert_eq!(input.lines().count(), 200);
     assert_eq!(solve_1(&input), 17316); // 17125 low
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 3121910778619);
 }
