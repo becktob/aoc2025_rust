@@ -3,7 +3,7 @@ pub fn solve(part2: bool) -> String {
     if part2 {
         "WIP".to_string()
     } else {
-        "WIP".to_string()
+        solve_1(&input).to_string()
     }
 }
 
@@ -52,4 +52,10 @@ static EXAMPLE: &str = "987654321111111
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 357);
+}
+#[test]
+fn test_solve_1() {
+    let input = std::fs::read_to_string("input_03.txt").expect("could not read file");
+    assert_eq!(input.lines().count(), 200);
+    assert_eq!(solve_1(&input), 17316); // 17125 low
 }
