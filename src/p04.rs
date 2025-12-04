@@ -47,6 +47,14 @@ fn accessible(diagram: &Diagram, roll: &Roll) -> bool {
     neighbors < 4
 }
 
+fn remove_accessible(diagram: Diagram) -> Diagram {
+    diagram
+        .iter()
+        .filter(|&roll| !accessible(&diagram, roll))
+        .cloned()
+        .collect()
+}
+
 #[cfg(test)]
 static EXAMPLE1: &str = "..@@.@@@@.
 @@@.@.@.@@
@@ -73,6 +81,13 @@ fn test_accessible() {
     let diagram = parse_diagram(EXAMPLE1);
     assert!(accessible(&diagram, &(0, 2)));
     assert!(!accessible(&diagram, &(1, 1)));
+}
+#[test]
+fn test_remove_accessible() {
+    let removed_once = remove_accessible(parse_diagram(EXAMPLE1));
+    assert_eq!(removed_once.len(), 71 - 13);
+    let removed_twice = remove_accessible(removed_once);
+    assert_eq!(removed_twice.len(), 71 - 13 - 12);
 }
 
 #[test]
