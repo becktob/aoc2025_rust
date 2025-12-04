@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 mod p01;
 mod p02;
 mod p03;
+mod p04;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
@@ -10,6 +11,7 @@ fn main() {
         ("01", p01::solve as SolveFunc),
         ("02", p02::solve as SolveFunc),
         ("03", p03::solve as SolveFunc),
+        ("04", p04::solve as SolveFunc),
     ]);
 
     for (name, func) in modules {
