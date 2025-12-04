@@ -42,8 +42,8 @@ fn parse_diagram(diagram: &str) -> Diagram {
 }
 
 fn accessible(diagram: &Diagram, roll: &Roll) -> bool {
-    let (y, x) = (roll.0 as i32, roll.1 as i32);
-    let neighbors = [
+    let (y, x) = (roll.0, roll.1);
+    let deltas = [
         (-1, -1),
         (-1, 0),
         (-1, 1),
@@ -52,10 +52,17 @@ fn accessible(diagram: &Diagram, roll: &Roll) -> bool {
         (1, -1),
         (1, 0),
         (1, 1),
-    ]
-    .iter()
-    .filter(|&&delta| diagram.contains(&((y + delta.0) as usize, (x + delta.1) as usize)))
-    .count();
+    ];
+    let neighbors = deltas
+        .iter()
+        .filter(|&&delta| {
+            // TODO: this goes wrong when there are rolls at usize.MAX
+            diagram.contains(&(
+                y.wrapping_add_signed(delta.0),
+                x.wrapping_add_signed(delta.1),
+            ))
+        })
+        .count();
     neighbors < 4
 }
 
