@@ -5,9 +5,18 @@ pub fn solve(part2: bool) -> String {
     if part2 {
         "WIP".to_string()
     } else {
-        "WIP".to_string()
+        solve_1(&input).to_string()
     }
 }
+
+fn solve_1(input: &str) -> usize {
+    let diagram = parse_diagram(input);
+    diagram
+        .iter()
+        .filter(|&roll| accessible(&diagram, roll))
+        .count()
+}
+
 type Roll = (usize, usize);
 type Diagram = HashSet<Roll>;
 
@@ -64,4 +73,14 @@ fn test_accessible() {
     let diagram = parse_diagram(EXAMPLE1);
     assert!(accessible(&diagram, &(0, 2)));
     assert!(!accessible(&diagram, &(1, 1)));
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE1), 13);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "1393");
 }
