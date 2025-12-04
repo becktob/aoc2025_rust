@@ -3,7 +3,7 @@ use std::collections::HashSet;
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_04.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -15,6 +15,18 @@ fn solve_1(input: &str) -> usize {
         .iter()
         .filter(|&roll| accessible(&diagram, roll))
         .count()
+}
+
+fn solve_2(input: &str) -> usize {
+    let mut diagram = parse_diagram(input);
+    let inital_count = diagram.len();
+    let mut last_count = usize::MAX;
+
+    while diagram.len() < last_count {
+        last_count = diagram.len();
+        diagram = remove_accessible(diagram)
+    }
+    inital_count - last_count
 }
 
 type Roll = (usize, usize);
@@ -98,4 +110,14 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "1393");
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE1), 43);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "8643");
 }
