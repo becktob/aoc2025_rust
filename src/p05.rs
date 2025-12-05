@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use std::ops::Add;
 use std::iter;
+use std::ops::Add;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_05.txt").expect("could not read file");
@@ -24,26 +24,41 @@ fn solve_2(input: &str) -> u64 {
     let mut union = HashSet::new();
 
     for r in ranges {
-        union_into(&mut union, &r);
+        union = union_into(&union, &r.clone());
     }
 
     union.iter().map(|r| r.end - r.start + 1).sum()
 }
 
-fn union_into(ranges: &mut HashSet<FreshRange>, new_range: &FreshRange) {
+fn union_into(ranges: &HashSet<FreshRange>, new_range: &FreshRange) -> HashSet<FreshRange> {
     let ranges_to_union: HashSet<FreshRange> = ranges
-        .extract_if(|existing| {
+        .iter()
+        .filter(|existing| {
             // add/subtract 1 to also merge adjacent Ranges
             existing.contains(&new_range.start.saturating_sub_signed(1))
                 | existing.contains(&new_range.end.add(1))
         })
-        .chain(iter::once(new_range.clone()))
+        .chain(iter::once(new_range))
+        .cloned()
         .collect();
 
     let lower_bound = ranges_to_union.iter().map(|r| r.start).min().unwrap();
     let upper_bound = ranges_to_union.iter().map(|r| r.end).max().unwrap();
 
-    ranges.insert(FreshRange{ start: lower_bound, end: upper_bound });
+    let new_union = FreshRange {
+        start: lower_bound,
+        end: upper_bound,
+    };
+
+    ranges
+        .iter()
+        .filter(|existing| {
+            !(existing.contains(&new_range.start.saturating_sub_signed(1))
+                | existing.contains(&new_range.end.add(1)))
+        })
+        .chain(iter::once(&new_union))
+        .cloned()
+        .collect()
 }
 
 type Id = u64;
@@ -60,13 +75,15 @@ impl FreshRange {
     }
 }
 
-
 fn parse(input: &str) -> (HashSet<FreshRange>, HashSet<Id>) {
     let (ranges_raw, ingredients_raw) = input.split_once("\n\n").unwrap();
     let ranges = ranges_raw
         .lines()
         .map(|l| l.split_once("-").unwrap())
-        .map(|(from, to)| FreshRange { start: from.parse().unwrap(), end: to.parse().unwrap() })
+        .map(|(from, to)| FreshRange {
+            start: from.parse().unwrap(),
+            end: to.parse().unwrap(),
+        })
         .collect();
     let ingredients = ingredients_raw
         .lines()
@@ -94,7 +111,7 @@ fn test_parse() {
     assert_eq!(ranges.len(), 4);
     assert_eq!(ingredients.len(), 6);
 
-    assert!(ranges.contains(&FreshRange{ start: 12, end: 18 }));
+    assert!(ranges.contains(&FreshRange { start: 12, end: 18 }));
     assert!(ingredients.contains(&8));
 }
 
@@ -116,30 +133,38 @@ fn test_solve_2_example() {
 #[test]
 fn test_solve_2_union_into_fill_gap() {
     let mut with_gap = HashSet::new();
-    with_gap.insert(FreshRange{start: 0, end: 10});
-    with_gap.insert(FreshRange{start: 20, end: 30});
+    with_gap.insert(FreshRange { start: 0, end: 10 });
+    with_gap.insert(FreshRange { start: 20, end: 30 });
 
-    let middle = FreshRange{start: 10, end: 20};
-    union_into(&mut with_gap, &middle);
-    assert_eq!(with_gap, HashSet::from_iter(vec![FreshRange{start: 0, end: 30}]));
+    let middle = FreshRange { start: 10, end: 20 };
+    let union = union_into(&mut with_gap, &middle);
+    assert_eq!(
+        union,
+        HashSet::from_iter(vec![FreshRange { start: 0, end: 30 }])
+    );
 }
 
 #[test]
 fn test_solve_2_union_into_fill_gap_non_overlapping() {
     let mut with_gap = HashSet::new();
-    with_gap.insert(FreshRange{start: 0, end: 10});
-    with_gap.insert(FreshRange{start: 20, end: 30});
+    with_gap.insert(FreshRange { start: 0, end: 10 });
+    with_gap.insert(FreshRange { start: 20, end: 30 });
 
-    let middle = FreshRange{start: 11, end: 19};
-    union_into(&mut with_gap, &middle);
-    assert_eq!(with_gap, HashSet::from_iter(vec![FreshRange{start: 0, end: 30}]));
+    let middle = FreshRange { start: 11, end: 19 };
+    let union = union_into(&mut with_gap, &middle);
+    assert_eq!(
+        union,
+        HashSet::from_iter(vec![FreshRange { start: 0, end: 30 }])
+    );
 }
 
 #[test]
 fn test_solve_2() {
-    assert_eq!(solve(true), "640"); // 369482253727747 too high
+    assert_eq!(solve(true), "640");
+    // 369482253727747 too high
     // 371869364553730 too high
     // 371481987128973
     // 369577397844941 too high
     // 381245701025211
+    // ... getting unstable, but similar results without changing code :(
 }
