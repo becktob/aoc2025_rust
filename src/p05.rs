@@ -1,11 +1,11 @@
 use std::collections::HashSet;
+use std::ops::{Add, Sub};
 use std::{iter, ops};
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_05.txt").expect("could not read file");
     if part2 {
-        "wip".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -22,7 +22,10 @@ fn solve_1(input: &str) -> usize {
 fn solve_2(input: &str) -> u64 {
     let (ranges, ingredients) = parse(input);
     let mut union = HashSet::new();
-    ranges.iter().for_each(|r| union_into(&mut union, r));
+
+    for r in ranges {
+        union_into(&mut union, &r);
+    }
 
     union.iter().map(|r| r.end() - r.start() + 1).sum()
 }
@@ -30,7 +33,9 @@ fn solve_2(input: &str) -> u64 {
 fn union_into(ranges: &mut HashSet<FreshRange>, new_range: &FreshRange) {
     let ranges_to_union: HashSet<FreshRange> = ranges
         .extract_if(|existing| {
-            existing.contains(new_range.start()) | existing.contains(new_range.end())
+            // add/subtract 1 to also merge adjacent Ranges
+            existing.contains(&new_range.start().saturating_sub_signed(1))
+                | existing.contains(&new_range.end().add(1))
         })
         .chain(iter::once(new_range.clone()))
         .collect();
@@ -94,4 +99,35 @@ fn test_solve_1() {
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 14);
+}
+
+#[test]
+fn test_solve_2_union_into_fill_gap() {
+    let mut with_gap = HashSet::new();
+    with_gap.insert(0..=10);
+    with_gap.insert(20..=30);
+
+    let middle = 10..=20;
+    union_into(&mut with_gap, &middle);
+    assert_eq!(with_gap, HashSet::from_iter(vec![0..=30]));
+}
+
+#[test]
+fn test_solve_2_union_into_fill_gap_non_overlapping() {
+    let mut with_gap = HashSet::new();
+    with_gap.insert(0..=10);
+    with_gap.insert(20..=30);
+
+    let middle = 11..=19;
+    union_into(&mut with_gap, &middle);
+    assert_eq!(with_gap, HashSet::from_iter(vec![0..=30]));
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "640"); // 369482253727747 too high
+    // 371869364553730 too high
+    // 371481987128973
+    // 369577397844941 too high
+    // 381245701025211
 }
