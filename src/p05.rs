@@ -67,7 +67,9 @@ impl FreshRange {
     }
 
     fn intersects(&self, other: &FreshRange) -> bool {
-        self.contains(&other.end) | self.contains(&other.start)
+        let subset = other.start < self.start && other.end > self.end;
+        let superset = other.start > self.start && other.end < self.end;
+        self.contains(&other.end) | self.contains(&other.start) | subset | superset
     }
 }
 
@@ -138,7 +140,7 @@ fn test_solve_2_union_into_fill_gap() {
     assert_eq!(union, vec![FreshRange { start: 0, end: 30 }]);
 }
 
-#[ignore]
+#[ignore] // not necessary, makes implementation complicated
 #[test]
 fn test_solve_2_union_into_fill_gap_non_overlapping() {
     let with_gap = vec![
@@ -164,13 +166,22 @@ fn test_solve_2_union_into_respects_gaps_of_size_1() {
 }
 
 #[test]
+fn test_solve_2_union_into_consumes_subsets() {
+    let subset = FreshRange { start: 10, end: 12 };
+    let superset = FreshRange { start: 1, end: 22 };
+    let union = union_into(&vec![subset], &superset);
+    assert_eq!(union, vec!(superset));
+}
+
+#[test]
+fn test_solve_2_union_into_consumes_subsets_reverse() {
+    let subset = FreshRange { start: 10, end: 12 };
+    let superset = FreshRange { start: 1, end: 22 };
+    let union = union_into(&vec![superset.clone()], &subset);
+    assert_eq!(union, vec!(superset));
+}
+
+#[test]
 fn test_solve_2() {
-    assert_eq!(solve(true), "640");
-    // 369482253727747 too high
-    // 371869364553730 too high
-    // 371481987128973
-    // 369577397844941 too high
-    // 381245701025211
-    // ... getting unstable, but similar results without changing code :(
-    // 400495066357532 using Vec
+    assert_eq!(solve(true), "365804144481581");
 }
