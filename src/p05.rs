@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::ops;
+use std::{iter, ops};
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_05.txt").expect("could not read file");
@@ -17,6 +17,28 @@ fn solve_1(input: &str) -> usize {
         .iter()
         .filter(|i| ranges.iter().any(|r| r.contains(i)));
     fresh_ingredients.count()
+}
+
+fn solve_2(input: &str) -> u64 {
+    let (ranges, ingredients) = parse(input);
+    let mut union = HashSet::new();
+    ranges.iter().for_each(|r| union_into(&mut union, r));
+
+    union.iter().map(|r| r.end() - r.start() + 1).sum()
+}
+
+fn union_into(ranges: &mut HashSet<FreshRange>, new_range: &FreshRange) {
+    let ranges_to_union: HashSet<FreshRange> = ranges
+        .extract_if(|existing| {
+            existing.contains(new_range.start()) | existing.contains(new_range.end())
+        })
+        .chain(iter::once(new_range.clone()))
+        .collect();
+
+    let lower_bound = ranges_to_union.iter().map(|r| r.start()).min().unwrap();
+    let upper_bound = ranges_to_union.iter().map(|r| r.end()).max().unwrap();
+
+    ranges.insert(*lower_bound..=*upper_bound);
 }
 
 type Id = u64;
@@ -67,4 +89,9 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "640");
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 14);
 }
