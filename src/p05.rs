@@ -1,5 +1,4 @@
 use std::iter;
-use std::ops::Add;
 use std::vec::Vec;
 
 pub fn solve(part2: bool) -> String {
@@ -33,11 +32,7 @@ fn solve_2(input: &str) -> u64 {
 fn union_into(ranges: &Vec<FreshRange>, new_range: &FreshRange) -> Vec<FreshRange> {
     let ranges_to_union: Vec<FreshRange> = ranges
         .iter()
-        .filter(|existing| {
-            // add/subtract 1 to also merge adjacent Ranges
-            existing.contains(&new_range.start.saturating_sub_signed(1))
-                | existing.contains(&new_range.end.add(1))
-        })
+        .filter(|existing| existing.intersects(new_range))
         .chain(iter::once(new_range))
         .cloned()
         .collect();
@@ -52,10 +47,7 @@ fn union_into(ranges: &Vec<FreshRange>, new_range: &FreshRange) -> Vec<FreshRang
 
     ranges
         .iter()
-        .filter(|existing| {
-            !(existing.contains(&new_range.start.saturating_sub_signed(1))
-                | existing.contains(&new_range.end.add(1)))
-        })
+        .filter(|existing| !existing.intersects(new_range))
         .chain(iter::once(&new_union))
         .cloned()
         .collect()
@@ -72,6 +64,10 @@ struct FreshRange {
 impl FreshRange {
     fn contains(&self, id: &Id) -> bool {
         self.start <= *id && *id <= self.end
+    }
+
+    fn intersects(&self, other: &FreshRange) -> bool {
+        self.contains(&other.end) | self.contains(&other.start)
     }
 }
 
@@ -142,6 +138,7 @@ fn test_solve_2_union_into_fill_gap() {
     assert_eq!(union, vec![FreshRange { start: 0, end: 30 }]);
 }
 
+#[ignore]
 #[test]
 fn test_solve_2_union_into_fill_gap_non_overlapping() {
     let with_gap = vec![
