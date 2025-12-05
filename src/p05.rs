@@ -155,6 +155,18 @@ fn test_solve_2_union_into_fill_gap_non_overlapping() {
 }
 
 #[test]
+fn test_solve_2_union_into_respects_gaps_of_size_1() {
+    let with_gap = vec![
+        FreshRange { start: 0, end: 10 },
+        FreshRange { start: 20, end: 30 },
+    ];
+
+    let middle = FreshRange { start: 12, end: 18 };
+    let union = union_into(&with_gap, &middle);
+    assert_eq!(union.len(), 3);
+}
+
+#[test]
 fn test_solve_2() {
     assert_eq!(solve(true), "640");
     // 369482253727747 too high
