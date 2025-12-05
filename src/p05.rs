@@ -19,7 +19,7 @@ fn solve_1(input: &str) -> usize {
     fresh_ingredients.count()
 }
 
-type Id = u32;
+type Id = u64;
 type FreshRange = ops::RangeInclusive<Id>;
 
 fn parse(input: &str) -> (HashSet<FreshRange>, HashSet<Id>) {
@@ -62,4 +62,9 @@ fn test_parse() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 3);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "640");
 }

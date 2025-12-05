@@ -13,7 +13,7 @@ fn main() {
         ("02", p02::solve as SolveFunc),
         ("03", p03::solve as SolveFunc),
         ("04", p04::solve as SolveFunc),
-        ("05", p04::solve as SolveFunc),
+        ("05", p05::solve as SolveFunc),
     ]);
 
     for (name, func) in modules {
