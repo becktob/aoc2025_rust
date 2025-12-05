@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use std::ops::{Add, Sub};
-use std::{iter, ops};
+use std::ops::Add;
+use std::iter;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_05.txt").expect("could not read file");
@@ -20,41 +20,53 @@ fn solve_1(input: &str) -> usize {
 }
 
 fn solve_2(input: &str) -> u64 {
-    let (ranges, ingredients) = parse(input);
+    let (ranges, _) = parse(input);
     let mut union = HashSet::new();
 
     for r in ranges {
         union_into(&mut union, &r);
     }
 
-    union.iter().map(|r| r.end() - r.start() + 1).sum()
+    union.iter().map(|r| r.end - r.start + 1).sum()
 }
 
 fn union_into(ranges: &mut HashSet<FreshRange>, new_range: &FreshRange) {
     let ranges_to_union: HashSet<FreshRange> = ranges
         .extract_if(|existing| {
             // add/subtract 1 to also merge adjacent Ranges
-            existing.contains(&new_range.start().saturating_sub_signed(1))
-                | existing.contains(&new_range.end().add(1))
+            existing.contains(&new_range.start.saturating_sub_signed(1))
+                | existing.contains(&new_range.end.add(1))
         })
         .chain(iter::once(new_range.clone()))
         .collect();
 
-    let lower_bound = ranges_to_union.iter().map(|r| r.start()).min().unwrap();
-    let upper_bound = ranges_to_union.iter().map(|r| r.end()).max().unwrap();
+    let lower_bound = ranges_to_union.iter().map(|r| r.start).min().unwrap();
+    let upper_bound = ranges_to_union.iter().map(|r| r.end).max().unwrap();
 
-    ranges.insert(*lower_bound..=*upper_bound);
+    ranges.insert(FreshRange{ start: lower_bound, end: upper_bound });
 }
 
 type Id = u64;
-type FreshRange = ops::RangeInclusive<Id>;
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+struct FreshRange {
+    start: Id,
+    end: Id,
+}
+
+impl FreshRange {
+    fn contains(&self, id: &Id) -> bool {
+        self.start <= *id && *id <= self.end
+    }
+}
+
 
 fn parse(input: &str) -> (HashSet<FreshRange>, HashSet<Id>) {
     let (ranges_raw, ingredients_raw) = input.split_once("\n\n").unwrap();
     let ranges = ranges_raw
         .lines()
         .map(|l| l.split_once("-").unwrap())
-        .map(|(from, to)| from.parse::<Id>().unwrap()..=to.parse::<Id>().unwrap())
+        .map(|(from, to)| FreshRange { start: from.parse().unwrap(), end: to.parse().unwrap() })
         .collect();
     let ingredients = ingredients_raw
         .lines()
@@ -82,7 +94,7 @@ fn test_parse() {
     assert_eq!(ranges.len(), 4);
     assert_eq!(ingredients.len(), 6);
 
-    assert!(ranges.contains(&(12..=18)));
+    assert!(ranges.contains(&FreshRange{ start: 12, end: 18 }));
     assert!(ingredients.contains(&8));
 }
 
@@ -104,23 +116,23 @@ fn test_solve_2_example() {
 #[test]
 fn test_solve_2_union_into_fill_gap() {
     let mut with_gap = HashSet::new();
-    with_gap.insert(0..=10);
-    with_gap.insert(20..=30);
+    with_gap.insert(FreshRange{start: 0, end: 10});
+    with_gap.insert(FreshRange{start: 20, end: 30});
 
-    let middle = 10..=20;
+    let middle = FreshRange{start: 10, end: 20};
     union_into(&mut with_gap, &middle);
-    assert_eq!(with_gap, HashSet::from_iter(vec![0..=30]));
+    assert_eq!(with_gap, HashSet::from_iter(vec![FreshRange{start: 0, end: 30}]));
 }
 
 #[test]
 fn test_solve_2_union_into_fill_gap_non_overlapping() {
     let mut with_gap = HashSet::new();
-    with_gap.insert(0..=10);
-    with_gap.insert(20..=30);
+    with_gap.insert(FreshRange{start: 0, end: 10});
+    with_gap.insert(FreshRange{start: 20, end: 30});
 
-    let middle = 11..=19;
+    let middle = FreshRange{start: 11, end: 19};
     union_into(&mut with_gap, &middle);
-    assert_eq!(with_gap, HashSet::from_iter(vec![0..=30]));
+    assert_eq!(with_gap, HashSet::from_iter(vec![FreshRange{start: 0, end: 30}]));
 }
 
 #[test]
