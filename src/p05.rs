@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use std::iter;
 use std::ops::Add;
+use std::vec::Vec;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_05.txt").expect("could not read file");
@@ -21,7 +21,7 @@ fn solve_1(input: &str) -> usize {
 
 fn solve_2(input: &str) -> u64 {
     let (ranges, _) = parse(input);
-    let mut union = HashSet::new();
+    let mut union = Vec::new();
 
     for r in ranges {
         union = union_into(&union, &r.clone());
@@ -30,8 +30,8 @@ fn solve_2(input: &str) -> u64 {
     union.iter().map(|r| r.end - r.start + 1).sum()
 }
 
-fn union_into(ranges: &HashSet<FreshRange>, new_range: &FreshRange) -> HashSet<FreshRange> {
-    let ranges_to_union: HashSet<FreshRange> = ranges
+fn union_into(ranges: &Vec<FreshRange>, new_range: &FreshRange) -> Vec<FreshRange> {
+    let ranges_to_union: Vec<FreshRange> = ranges
         .iter()
         .filter(|existing| {
             // add/subtract 1 to also merge adjacent Ranges
@@ -75,7 +75,7 @@ impl FreshRange {
     }
 }
 
-fn parse(input: &str) -> (HashSet<FreshRange>, HashSet<Id>) {
+fn parse(input: &str) -> (Vec<FreshRange>, Vec<Id>) {
     let (ranges_raw, ingredients_raw) = input.split_once("\n\n").unwrap();
     let ranges = ranges_raw
         .lines()
@@ -132,30 +132,26 @@ fn test_solve_2_example() {
 
 #[test]
 fn test_solve_2_union_into_fill_gap() {
-    let mut with_gap = HashSet::new();
-    with_gap.insert(FreshRange { start: 0, end: 10 });
-    with_gap.insert(FreshRange { start: 20, end: 30 });
+    let with_gap = vec![
+        FreshRange { start: 0, end: 10 },
+        FreshRange { start: 20, end: 30 },
+    ];
 
     let middle = FreshRange { start: 10, end: 20 };
-    let union = union_into(&mut with_gap, &middle);
-    assert_eq!(
-        union,
-        HashSet::from_iter(vec![FreshRange { start: 0, end: 30 }])
-    );
+    let union = union_into(&with_gap, &middle);
+    assert_eq!(union, vec![FreshRange { start: 0, end: 30 }]);
 }
 
 #[test]
 fn test_solve_2_union_into_fill_gap_non_overlapping() {
-    let mut with_gap = HashSet::new();
-    with_gap.insert(FreshRange { start: 0, end: 10 });
-    with_gap.insert(FreshRange { start: 20, end: 30 });
+    let with_gap = vec![
+        FreshRange { start: 0, end: 10 },
+        FreshRange { start: 20, end: 30 },
+    ];
 
     let middle = FreshRange { start: 11, end: 19 };
-    let union = union_into(&mut with_gap, &middle);
-    assert_eq!(
-        union,
-        HashSet::from_iter(vec![FreshRange { start: 0, end: 30 }])
-    );
+    let union = union_into(&with_gap, &middle);
+    assert_eq!(union, vec![FreshRange { start: 0, end: 30 }]);
 }
 
 #[test]
@@ -167,4 +163,5 @@ fn test_solve_2() {
     // 369577397844941 too high
     // 381245701025211
     // ... getting unstable, but similar results without changing code :(
+    // 400495066357532 using Vec
 }
