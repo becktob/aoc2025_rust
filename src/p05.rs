@@ -7,9 +7,16 @@ pub fn solve(part2: bool) -> String {
         "wip".to_string()
         //solve_2(&input).to_string()
     } else {
-        "wip".to_string()
-        //solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
+}
+
+fn solve_1(input: &str) -> usize {
+    let (ranges, ingredients) = parse(input);
+    let fresh_ingredients = ingredients
+        .iter()
+        .filter(|i| ranges.iter().any(|r| r.contains(i)));
+    fresh_ingredients.count()
 }
 
 type Id = u32;
@@ -50,4 +57,9 @@ fn test_parse() {
 
     assert!(ranges.contains(&(12..=18)));
     assert!(ingredients.contains(&8));
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 3);
 }
