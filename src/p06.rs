@@ -12,6 +12,18 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> u32 {
+    let problems = parse_problems(&input);
+    problems.iter().map(compute).sum()
+}
+
+fn compute(problem: &Problem) -> u32 {
+    let op = problem.operator;
+    problem.numbers[1..]
+        .iter()
+        .fold(problem.numbers[0], |acc, &i| op(acc, i))
+}
+
 struct Problem {
     numbers: Vec<u32>,
     operator: fn(u32, u32) -> u32,
@@ -73,4 +85,16 @@ fn test_parse_problems() {
     assert_eq!(problems.len(), 4);
     assert_eq!(problems[0].numbers, vec![123, 45, 6]);
     // Todo test operator equality?
+}
+
+#[test]
+fn test_compute() {
+    let problems = parse_problems(&EXAMPLE);
+    assert_eq!(compute(&problems[0]), 33210);
+    assert_eq!(compute(&problems[1]), 490);
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 4277556);
 }
