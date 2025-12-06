@@ -1,23 +1,21 @@
 use std::collections::HashMap;
-use std::ops;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_06.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
-        //crate::p06::solve_2(&input).to_string()
+        //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //crate::p06::solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
 }
 
-fn solve_1(input: &str) -> u32 {
+fn solve_1(input: &str) -> u128 {
     let problems = parse_problems(&input);
     problems.iter().map(compute).sum()
 }
 
-fn compute(problem: &Problem) -> u32 {
+fn compute(problem: &Problem) -> u128 {
     let op = problem.operator;
     problem.numbers[1..]
         .iter()
@@ -25,17 +23,17 @@ fn compute(problem: &Problem) -> u32 {
 }
 
 struct Problem {
-    numbers: Vec<u32>,
-    operator: fn(u32, u32) -> u32,
+    numbers: Vec<u128>,
+    operator: fn(u128, u128) -> u128,
 }
 
-type BinOp = fn(u32, u32) -> u32;
+type BinOp = fn(u128, u128) -> u128;
 
-fn add(x: u32, y: u32) -> u32 {
+fn add(x: u128, y: u128) -> u128 {
     x + y
 }
 
-fn mul(x: u32, y: u32) -> u32 {
+fn mul(x: u128, y: u128) -> u128 {
     x * y
 }
 
@@ -97,4 +95,9 @@ fn test_compute() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 4277556);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "4693159084994");
 }
