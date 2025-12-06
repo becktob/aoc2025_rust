@@ -38,7 +38,7 @@ fn mul(x: u128, y: u128) -> u128 {
 }
 
 fn parse_problems(input: &&str) -> Vec<Problem> {
-    let n_cols = input.lines().next().unwrap().split_whitespace().count();
+    let n_problems = input.lines().next().unwrap().split_whitespace().count();
 
     let mut iterators_per_line: Vec<_> = input
         .lines()
@@ -46,7 +46,7 @@ fn parse_problems(input: &&str) -> Vec<Problem> {
         .map(|line| line.split_whitespace())
         .collect();
 
-    let columns: Vec<Vec<&str>> = (0..n_cols)
+    let columns: Vec<Vec<&str>> = (0..n_problems)
         .map(|_| {
             iterators_per_line
                 .iter_mut()
@@ -70,6 +70,54 @@ fn parse_problems(input: &&str) -> Vec<Problem> {
         .collect()
 }
 
+fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
+    let n_cols = input.lines().next().unwrap().chars().count();
+    let n_number_rows = input.lines().count() - 1;
+
+    let mut operators: HashMap<&str, BinOp> = HashMap::new();
+    operators.insert("+", add);
+    operators.insert("*", mul);
+    let operators: Vec<BinOp> = input
+        .lines()
+        .last()
+        .unwrap()
+        .split_whitespace()
+        .map(|c| *operators.get(c).unwrap())
+        .collect();
+
+    let mut iterators_per_line: Vec<_> =
+        input.lines().into_iter().map(|line| line.chars()).collect();
+
+    let columns: Vec<Vec<char>> = (0..n_cols)
+        .map(|_| {
+            iterators_per_line[0..n_number_rows]
+                .iter_mut()
+                .map(|line| line.next().unwrap())
+                .collect()
+        })
+        .rev()
+        .collect();
+
+    let blocks = columns
+        .split(|col| col.iter().all(|&char| char == ' '))
+        .to_owned();
+
+    let numbers_s: Vec<Vec<u128>> = blocks
+        .map(|cols| {
+            cols.iter()
+                .rev()
+                .map(|c| c.iter().collect::<String>().trim().parse().unwrap())
+                .collect()
+        })
+        .collect();
+
+    numbers_s
+        .into_iter()
+        .zip(operators)
+        .map(|(numbers, operator)| Problem { numbers, operator })
+        .collect()
+}
+
 #[cfg(test)]
 static EXAMPLE: &str = "123 328  51 64
  45 64  387 23
@@ -83,6 +131,13 @@ fn test_parse_problems() {
     assert_eq!(problems.len(), 4);
     assert_eq!(problems[0].numbers, vec![123, 45, 6]);
     // Todo test operator equality?
+}
+
+#[test]
+fn test_parse_cephalopod() {
+    let problems = parse_input_cephalopod(&EXAMPLE);
+    assert_eq!(problems.len(), 4);
+    assert_eq!(problems[0].numbers, vec![356, 24, 1]);
 }
 
 #[test]
