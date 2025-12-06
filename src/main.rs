@@ -5,6 +5,7 @@ mod p02;
 mod p03;
 mod p04;
 mod p05;
+mod p06;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
@@ -14,6 +15,7 @@ fn main() {
         ("03", p03::solve as SolveFunc),
         ("04", p04::solve as SolveFunc),
         ("05", p05::solve as SolveFunc),
+        ("06", p06::solve as SolveFunc),
     ]);
 
     for (name, func) in modules {
