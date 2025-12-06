@@ -3,8 +3,7 @@ use std::collections::HashMap;
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_06.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -12,6 +11,11 @@ pub fn solve(part2: bool) -> String {
 
 fn solve_1(input: &str) -> u128 {
     let problems = parse_problems(&input);
+    problems.iter().map(compute).sum()
+}
+
+fn solve_2(input: &str) -> u128 {
+    let problems = parse_input_cephalopod(&input);
     problems.iter().map(compute).sum()
 }
 
@@ -119,11 +123,8 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
 }
 
 #[cfg(test)]
-static EXAMPLE: &str = "123 328  51 64
- 45 64  387 23
-  6 98  215 314
-*   +   *   +
-";
+// trailing whitespace is relevant!
+static EXAMPLE: &str = "123 328  51 64 \n 45 64  387 23 \n  6 98  215 314\n*   +   *   +  \n";
 
 #[test]
 fn test_parse_problems() {
@@ -138,6 +139,9 @@ fn test_parse_cephalopod() {
     let problems = parse_input_cephalopod(&EXAMPLE);
     assert_eq!(problems.len(), 4);
     assert_eq!(problems[0].numbers, vec![356, 24, 1]);
+    assert_eq!(problems[3].numbers, vec![4, 431, 623]);
+    assert_eq!(compute(&problems[0]), 8544);
+    assert_eq!(compute(&problems[3]), 1058);
 }
 
 #[test]
@@ -155,4 +159,14 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "4693159084994");
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 3263827);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "11643736116335");
 }
