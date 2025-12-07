@@ -29,17 +29,25 @@ fn parse_manifold(input: &str) -> Manifest {
 }
 
 fn pass_row(beams: &BeamRow, splitters: &SplitterRow) -> BeamRow {
-    beams
+    let (new_beams, splits) = pass_row_count_splits(beams, splitters);
+    new_beams
+}
+
+fn pass_row_count_splits(beams: &BeamRow, splitters: &SplitterRow) -> (BeamRow, usize) {
+    let mut splits = 0;
+    let new_beams = beams
         .iter()
         .cloned()
         .flat_map(|beam| {
             if splitters.contains(&beam) {
+                splits += 1;
                 vec![beam.sub(1), beam.add(1)]
             } else {
                 vec![beam]
             }
         })
-        .collect()
+        .collect();
+    (new_beams, splits)
 }
 
 static EXAMPLE: &str = ".......S.......
@@ -79,4 +87,14 @@ fn test_pass_row() {
     let beams_after_second = pass_row(&beams_after_first_splitter, &manifest.splitters[4]);
     assert_eq!(beams_after_first_splitter, BeamRow::from([6, 8]));
     assert_eq!(beams_after_second, BeamRow::from([5, 7, 9]));
+}
+
+#[test]
+fn test_pass_row_count_splits() {
+    let manifest = parse_manifold(EXAMPLE);
+    let beam = BeamRow::from([manifest.start]);
+    let (beam, splits_first) = pass_row_count_splits(&beam, &manifest.splitters[2]);
+    let (_, splits_second) = pass_row_count_splits(&beam, &manifest.splitters[4]);
+    assert_eq!(splits_first, 1);
+    assert_eq!(splits_second, 2);
 }
