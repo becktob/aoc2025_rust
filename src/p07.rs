@@ -2,13 +2,12 @@ use std::collections::HashSet;
 use std::ops::{Add, Sub};
 
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_06.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_07.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
 }
 
@@ -20,7 +19,7 @@ fn solve_1(input: &str) -> usize {
         .splitters
         .iter()
         .scan(start_beams, |beams, splitters| {
-            let splits;  // Todo: can I mix this into the tuple-destructuring?
+            let splits; // Todo: can I mix this into the tuple-destructuring?
             (*beams, splits) = pass_row_count_splits(beams, splitters);
             Some(splits)
         })
@@ -117,4 +116,9 @@ fn test_pass_row_count_splits() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 21);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "1656");
 }
