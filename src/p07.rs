@@ -42,8 +42,9 @@ fn parse_manifold(input: &str) -> Manifold {
     Manifold { start, splitters }
 }
 
+#[cfg(test)]
 fn pass_row(beams: &BeamRow, splitters: &SplitterRow) -> BeamRow {
-    let (new_beams, splits) = pass_row_count_splits(beams, splitters);
+    let (new_beams, _) = pass_row_count_splits(beams, splitters);
     new_beams
 }
 
@@ -64,6 +65,7 @@ fn pass_row_count_splits(beams: &BeamRow, splitters: &SplitterRow) -> (BeamRow, 
     (new_beams, splits)
 }
 
+#[cfg(test)]
 static EXAMPLE: &str = ".......S.......
 ...............
 .......^.......
