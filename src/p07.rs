@@ -12,6 +12,21 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> usize {
+    let manifold = parse_manifold(input);
+
+    let start_beams = BeamRow::from([manifold.start]);
+    manifold
+        .splitters
+        .iter()
+        .scan(start_beams, |beams, splitters| {
+            let splits;  // Todo: can I mix this into the tuple-destructuring?
+            (*beams, splits) = pass_row_count_splits(beams, splitters);
+            Some(splits)
+        })
+        .sum()
+}
+
 type BeamRow = HashSet<usize>;
 type SplitterRow = HashSet<usize>;
 struct Manifold {
@@ -97,4 +112,9 @@ fn test_pass_row_count_splits() {
     let (_, splits_second) = pass_row_count_splits(&beam, &manifold.splitters[4]);
     assert_eq!(splits_first, 1);
     assert_eq!(splits_second, 2);
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 21);
 }
