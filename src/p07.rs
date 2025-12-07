@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-use std::ops::{Add, Sub};
+use std::collections::{HashMap, HashSet};
+use std::ops::{Add, AddAssign, Sub};
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_07.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -28,19 +27,24 @@ fn solve_1(input: &str) -> usize {
 
 fn solve_2(input: &str) -> usize {
     let manifold = parse_manifold(input);
-    let start_beams = QuantumBeamRow::from([manifold.start]);
+    let start_beams = QuantumBeamRow::from([(manifold.start, 1)]);
+
+    let mut line = 0;
     manifold
         .splitters
         .iter()
         .fold(start_beams, |beams, splitters| {
+            // let disp: String = (0..144).map(|i| if beams.contains_key(&i) {'|'} else {'.'}).collect();
+            // println!("{:?} - {:?}", line, disp);
+            line += 1;
             pass_row_quantum(&beams, splitters)
         })
-        .iter()
-        .count()
+        .values()
+        .sum()
 }
 
 type BeamRow = HashSet<usize>;
-type QuantumBeamRow = Vec<usize>;
+type QuantumBeamRow = HashMap<usize, usize>;
 type SplitterRow = HashSet<usize>;
 struct Manifold {
     start: usize,
@@ -80,27 +84,17 @@ fn pass_row_count_splits(beams: &BeamRow, splitters: &SplitterRow) -> (BeamRow, 
 }
 
 fn pass_row_quantum(beams: &QuantumBeamRow, splitters: &SplitterRow) -> QuantumBeamRow {
-    let (new_beams, _) = pass_row_quantum_count_splits(beams, splitters);
+    let mut new_beams = QuantumBeamRow::new();
+
+    beams.iter().for_each(|(&beam, count)| {
+        if splitters.contains(&beam) {
+            new_beams.entry(beam - 1).or_insert(0).add_assign(count);
+            new_beams.entry(beam + 1).or_insert(0).add_assign(count);
+        } else {
+            new_beams.entry(beam).or_insert(0).add_assign(count);
+        }
+    });
     new_beams
-}
-fn pass_row_quantum_count_splits(
-    beams: &QuantumBeamRow,
-    splitters: &SplitterRow,
-) -> (QuantumBeamRow, usize) {
-    let mut splits = 0;
-    let new_beams = beams
-        .iter()
-        .cloned()
-        .flat_map(|beam| {
-            if splitters.contains(&beam) {
-                splits += 1;
-                vec![beam.sub(1), beam.add(1)]
-            } else {
-                vec![beam]
-            }
-        })
-        .collect();
-    (new_beams, splits)
 }
 
 #[cfg(test)]
@@ -154,6 +148,16 @@ fn test_pass_row_count_splits() {
 }
 
 #[test]
+fn test_pass_row_quantum() {
+    let manifold = parse_manifold(EXAMPLE);
+    let beams = QuantumBeamRow::from([(manifold.start, 1)]);
+    let beams = pass_row_quantum(&beams, &manifold.splitters[2]);
+    assert_eq!(beams, QuantumBeamRow::from([(6, 1), (8, 1)]));
+    let beams = pass_row_quantum(&beams, &manifold.splitters[4]);
+    assert_eq!(beams, QuantumBeamRow::from([(5, 1), (7, 2), (9, 1)]));
+}
+
+#[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 21);
 }
@@ -166,4 +170,9 @@ fn test_solve_1() {
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 40);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "76624086587804");
 }
