@@ -11,6 +11,17 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str, n_to_connect: usize) -> usize {
+    let boxes = parse_boxes(input);
+
+    let circuits = connect_closest(&boxes, n_to_connect);
+    let mut circuit_sizes: Vec<_> = circuits.iter().map(HashSet::len).collect();
+    circuit_sizes.sort();
+    circuit_sizes.reverse();
+
+    circuit_sizes[0..3].iter().product()
+}
+
 type Box = [i64; 3];
 type Circuit = HashSet<Box>;
 
@@ -42,35 +53,36 @@ fn sorted_distances(boxes: &Vec<Box>) -> Vec<(&Box, &Box, f64)> {
 fn connect_closest(boxes: &Vec<Box>, n_to_connect: usize) -> Vec<Circuit> {
     let sorted_by_distance = sorted_distances(boxes);
 
-    let mut circuits : Vec<Circuit> = vec![];
-    sorted_by_distance.iter().take(n_to_connect).for_each(
-        |(a,b,_)| {
+    let mut circuits: Vec<Circuit> = vec![];
+    sorted_by_distance
+        .iter()
+        .take(n_to_connect)
+        .for_each(|(a, b, _)| {
             // todo: if let possible with two Options?
             let idx_a = circuits.iter().position(|c| c.contains(*a));
             let idx_b = circuits.iter().position(|c| c.contains(*b));
 
-            if let Some(idx_a) = idx_a && let Some(idx_b) = idx_b {
+            if let Some(idx_a) = idx_a
+                && let Some(idx_b) = idx_b
+                && idx_a != idx_b
+            {
                 let circ_a = circuits.swap_remove(idx_a);
                 let circ_b = circuits.swap_remove(idx_b);
 
                 let union: Circuit = circ_a.union(&circ_b).cloned().collect();
                 circuits.push(union);
-            }
-            else if let Some(idx_a) = idx_a {
+            } else if let Some(idx_a) = idx_a {
                 let mut circ_a = circuits.swap_remove(idx_a);
                 circ_a.insert((*b).clone());
                 circuits.push(circ_a);
-            }
-            else if let Some(idx_b) = idx_b {
+            } else if let Some(idx_b) = idx_b {
                 let mut circ_b = circuits.swap_remove(idx_b);
                 circ_b.insert((*a).clone());
                 circuits.push(circ_b);
-            }
-            else {
+            } else {
                 circuits.push(HashSet::from([(*a).clone(), (*b).clone()]));
             }
-        }
-    );
+        });
 
     circuits
 }
@@ -117,9 +129,14 @@ fn test_sorted_distances() {
 #[test]
 fn test_connect_closest() {
     let boxes = parse_boxes(EXAMPLE);
-    let circuits  = connect_closest(&boxes, 3);
+    let circuits = connect_closest(&boxes, 3);
     let mut circuit_sizes = circuits.iter().map(HashSet::len).collect::<Vec<usize>>();
     circuit_sizes.sort();
     assert_eq!(circuits.len(), 2);
     assert_eq!(circuit_sizes, vec![2, 3]);
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE, 10), 40);
 }
