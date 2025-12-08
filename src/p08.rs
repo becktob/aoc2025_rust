@@ -98,6 +98,7 @@ fn connect_pair<'a>(circuits: &mut Vec<Circuit<'a>>, a: &'a Box, b: &'a Box) {
     circuits.push(union);
 }
 
+#[cfg(test)]
 static EXAMPLE: &str = "162,817,812
 57,618,57
 906,360,560
