@@ -1,13 +1,12 @@
 use std::collections::HashSet;
 
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_07.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_08.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         // crate::p07::solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //crate::p07::solve_1(&input).to_string()
+        solve_1(&input, 1000).to_string()
     }
 }
 
@@ -58,30 +57,22 @@ fn connect_closest(boxes: &Vec<Box>, n_to_connect: usize) -> Vec<Circuit> {
         .iter()
         .take(n_to_connect)
         .for_each(|(a, b, _)| {
-            // todo: if let possible with two Options?
             let idx_a = circuits.iter().position(|c| c.contains(*a));
-            let idx_b = circuits.iter().position(|c| c.contains(*b));
-
-            if let Some(idx_a) = idx_a
-                && let Some(idx_b) = idx_b
-                && idx_a != idx_b
-            {
-                let circ_a = circuits.swap_remove(idx_a);
-                let circ_b = circuits.swap_remove(idx_b);
-
-                let union: Circuit = circ_a.union(&circ_b).cloned().collect();
-                circuits.push(union);
-            } else if let Some(idx_a) = idx_a {
-                let mut circ_a = circuits.swap_remove(idx_a);
-                circ_a.insert((*b).clone());
-                circuits.push(circ_a);
-            } else if let Some(idx_b) = idx_b {
-                let mut circ_b = circuits.swap_remove(idx_b);
-                circ_b.insert((*a).clone());
-                circuits.push(circ_b);
+            let circ_a = if let Some(idx_a) = idx_a {
+                circuits.swap_remove(idx_a)
             } else {
-                circuits.push(HashSet::from([(*a).clone(), (*b).clone()]));
-            }
+                HashSet::from([(*a).clone()])
+            };
+
+            let idx_b = circuits.iter().position(|c| c.contains(*b));
+            let circ_b = if let Some(idx_b) = idx_b {
+                circuits.swap_remove(idx_b)
+            } else {
+                HashSet::from([(*b).clone()])
+            };
+
+            let union: Circuit = circ_a.union(&circ_b).cloned().collect();
+            circuits.push(union);
         });
 
     circuits
@@ -139,4 +130,9 @@ fn test_connect_closest() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(EXAMPLE, 10), 40);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "90036");
 }
