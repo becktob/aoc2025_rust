@@ -27,7 +27,8 @@ fn solve_2(input: &str) -> i64 {
     let mut circuits: Vec<Circuit> = vec![];
 
     let mut i = 0;
-    while circuits.len() == 0 || circuits[0].len() < boxes.iter().len() {
+    let total_boxes = boxes.iter().len();
+    while circuits.first().map_or(0, HashSet::len) < total_boxes {
         let (a, b, _) = sorted_by_distance[i];
         i += 1;
         connect_pair(&mut circuits, a, b)
