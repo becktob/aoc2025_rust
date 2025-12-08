@@ -86,17 +86,16 @@ fn pass_row_count_splits(beams: &BeamRow, splitters: &SplitterRow) -> (BeamRow, 
 fn pass_row_quantum(beams: &QuantumBeamRow, splitters: &SplitterRow) -> QuantumBeamRow {
     let mut new_beams = QuantumBeamRow::new();
 
-    beams.iter().for_each(|(&beam, count)| {
-        let from_this_beam = if splitters.contains(&beam) {
-            vec![beam - 1, beam + 1]
-        } else {
-            vec![beam]
-        };
-
-        from_this_beam
-            .iter()
-            .for_each(|&i| new_beams.entry(i).or_insert(0).add_assign(count));
-    });
+    beams
+        .iter()
+        .flat_map(|(&beam, count)| {
+            if splitters.contains(&beam) {
+                vec![(beam - 1, count), (beam + 1, count)]
+            } else {
+                vec![(beam, count)]
+            }
+        })
+        .for_each(|(beam, count)| new_beams.entry(beam).or_insert(0).add_assign(count));
     new_beams
 }
 
