@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_07.txt").expect("could not read file");
     if part2 {
@@ -10,6 +12,7 @@ pub fn solve(part2: bool) -> String {
 }
 
 type Box = [i64; 3];
+type Circuit = HashSet<Box>;
 
 fn distance(first: &Box, other: &Box) -> f64 {
     f64::sqrt(
@@ -34,6 +37,42 @@ fn sorted_distances(boxes: &Vec<Box>) -> Vec<(&Box, &Box, f64)> {
         .collect::<Vec<(&Box, &Box, f64)>>();
     distances.sort_by(|(_, _, d1), (_, _, d2)| d1.total_cmp(d2));
     distances
+}
+
+fn connect_closest(boxes: &Vec<Box>, n_to_connect: usize) -> Vec<Circuit> {
+    let sorted_by_distance = sorted_distances(boxes);
+
+    let mut circuits : Vec<Circuit> = vec![];
+    sorted_by_distance.iter().take(n_to_connect).for_each(
+        |(a,b,_)| {
+            // todo: if let possible with two Options?
+            let idx_a = circuits.iter().position(|c| c.contains(*a));
+            let idx_b = circuits.iter().position(|c| c.contains(*b));
+
+            if let Some(idx_a) = idx_a && let Some(idx_b) = idx_b {
+                let circ_a = circuits.swap_remove(idx_a);
+                let circ_b = circuits.swap_remove(idx_b);
+
+                let union: Circuit = circ_a.union(&circ_b).cloned().collect();
+                circuits.push(union);
+            }
+            else if let Some(idx_a) = idx_a {
+                let mut circ_a = circuits.swap_remove(idx_a);
+                circ_a.insert((*b).clone());
+                circuits.push(circ_a);
+            }
+            else if let Some(idx_b) = idx_b {
+                let mut circ_b = circuits.swap_remove(idx_b);
+                circ_b.insert((*a).clone());
+                circuits.push(circ_b);
+            }
+            else {
+                circuits.push(HashSet::from([(*a).clone(), (*b).clone()]));
+            }
+        }
+    );
+
+    circuits
 }
 
 static EXAMPLE: &str = "162,817,812
@@ -73,4 +112,14 @@ fn test_sorted_distances() {
     let second_closest = (sorted_distances[1].0, sorted_distances[1].1);
     assert_eq!(closest_boxes, (&boxes[0], &boxes[19]));
     assert_eq!(second_closest, (&boxes[0], &boxes[7]));
+}
+
+#[test]
+fn test_connect_closest() {
+    let boxes = parse_boxes(EXAMPLE);
+    let circuits  = connect_closest(&boxes, 3);
+    let mut circuit_sizes = circuits.iter().map(HashSet::len).collect::<Vec<usize>>();
+    circuit_sizes.sort();
+    assert_eq!(circuits.len(), 2);
+    assert_eq!(circuit_sizes, vec![2, 3]);
 }
