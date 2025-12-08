@@ -3,8 +3,7 @@ use std::collections::HashSet;
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_08.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        // crate::p07::solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input, 1000).to_string()
     }
@@ -34,8 +33,7 @@ fn solve_2(input: &str) -> i64 {
         connect_pair(&mut circuits, a, b)
     }
 
-    let (a, b, _)  = sorted_by_distance[i-1];
-    println!("{:?} {:?}", a, b);
+    let (a, b, _) = sorted_by_distance[i - 1];
     a[0] * b[0]
 }
 
@@ -162,4 +160,9 @@ fn test_solve_1() {
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 25272);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "6083499488");
 }
