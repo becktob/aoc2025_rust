@@ -43,11 +43,9 @@ fn solve_2(input: &str) -> i64 {
 type Box = [i64; 3];
 type Circuit<'a> = HashSet<&'a Box>;
 
-fn distance(first: &Box, other: &Box) -> f64 {
-    f64::sqrt(
-        ((first[0] - other[0]).pow(2) + (first[1] - other[1]).pow(2) + (first[2] - other[2]).pow(2))
-            as f64,
-    )
+fn distance(a: &Box, b: &Box) -> f64 {
+    let squares = a.iter().zip(b).map(|(x1, x2)| (x2 - x1).pow(2));
+    f64::sqrt(squares.sum::<i64>() as f64)
 }
 
 fn parse_boxes(input: &str) -> Vec<Box> {
