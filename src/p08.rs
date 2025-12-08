@@ -11,25 +11,40 @@ pub fn solve(part2: bool) -> String {
 
 #[derive(Debug, Eq, PartialEq)]
 struct Box {
-    x: u64,
-    y: u64,
-    z: u64,
+    x: i64,
+    y: i64,
+    z: i64,
+}
+
+impl Box {
+    fn distance(&self, other: &Box) -> f64 {
+        f64::sqrt(
+            ((self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2))
+                as f64,
+        )
+    }
 }
 
 fn parse_boxes(input: &str) -> Vec<Box> {
     input
         .lines()
-        .map(|line| {
-            line.split(',')
-                .map(|s| s.parse().unwrap())
-                .collect()
-        })
-        .map(|xyz: Vec<u64>| Box {
+        .map(|line| line.split(',').map(|s| s.parse().unwrap()).collect())
+        .map(|xyz: Vec<i64>| Box {
             x: xyz[0],
             y: xyz[1],
             z: xyz[2],
         })
         .collect()
+}
+
+fn sorted_distances(boxes: &Vec<Box>) -> Vec<(&Box, &Box, f64)> {
+    let mut distances = boxes
+        .iter()
+        .enumerate()
+        .flat_map(|(i, a)| boxes[i + 1..].iter().map(move |b| (a, b, a.distance(b))))
+        .collect::<Vec<(&Box, &Box, f64)>>();
+    distances.sort_by(|(_, _, d1), (_, _, d2)| d1.total_cmp(d2));
+    distances
 }
 
 static EXAMPLE: &str = "162,817,812
@@ -66,4 +81,14 @@ fn test_parse_boxes() {
             z: 689
         }
     );
+}
+
+#[test]
+fn test_sorted_distances() {
+    let boxes = parse_boxes(EXAMPLE);
+    let sorted_distances = sorted_distances(&boxes);
+    let closest_boxes = (sorted_distances[0].0, sorted_distances[0].1);
+    let second_closest = (sorted_distances[1].0, sorted_distances[1].1);
+    assert_eq!(closest_boxes, (&boxes[0], &boxes[19]));
+    assert_eq!(second_closest, (&boxes[0], &boxes[7]));
 }
