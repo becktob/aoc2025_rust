@@ -9,31 +9,20 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
-struct Box {
-    x: i64,
-    y: i64,
-    z: i64,
-}
+type Box = [i64; 3];
 
-impl Box {
-    fn distance(&self, other: &Box) -> f64 {
-        f64::sqrt(
-            ((self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2))
-                as f64,
-        )
-    }
+fn distance(first: &Box, other: &Box) -> f64 {
+    f64::sqrt(
+        ((first[0] - other[0]).pow(2) + (first[1] - other[1]).pow(2) + (first[2] - other[2]).pow(2))
+            as f64,
+    )
 }
 
 fn parse_boxes(input: &str) -> Vec<Box> {
     input
         .lines()
         .map(|line| line.split(',').map(|s| s.parse().unwrap()).collect())
-        .map(|xyz: Vec<i64>| Box {
-            x: xyz[0],
-            y: xyz[1],
-            z: xyz[2],
-        })
+        .map(|xyz: Vec<i64>| [xyz[0], xyz[1], xyz[2]])
         .collect()
 }
 
@@ -41,7 +30,7 @@ fn sorted_distances(boxes: &Vec<Box>) -> Vec<(&Box, &Box, f64)> {
     let mut distances = boxes
         .iter()
         .enumerate()
-        .flat_map(|(i, a)| boxes[i + 1..].iter().map(move |b| (a, b, a.distance(b))))
+        .flat_map(|(i, a)| boxes[i + 1..].iter().map(move |b| (a, b, distance(a, b))))
         .collect::<Vec<(&Box, &Box, f64)>>();
     distances.sort_by(|(_, _, d1), (_, _, d2)| d1.total_cmp(d2));
     distances
@@ -73,14 +62,7 @@ static EXAMPLE: &str = "162,817,812
 fn test_parse_boxes() {
     let boxes = parse_boxes(EXAMPLE);
     assert_eq!(boxes.len(), 20);
-    assert_eq!(
-        boxes[19],
-        Box {
-            x: 425,
-            y: 690,
-            z: 689
-        }
-    );
+    assert_eq!(boxes[19], [425, 690, 689,]);
 }
 
 #[test]
