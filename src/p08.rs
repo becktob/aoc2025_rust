@@ -22,7 +22,7 @@ fn solve_1(input: &str, n_to_connect: usize) -> usize {
 }
 
 type Box = [i64; 3];
-type Circuit = HashSet<Box>;
+type Circuit<'a> = HashSet<&'a Box>;
 
 fn distance(first: &Box, other: &Box) -> f64 {
     f64::sqrt(
@@ -49,29 +49,29 @@ fn sorted_distances(boxes: &Vec<Box>) -> Vec<(&Box, &Box, f64)> {
     distances
 }
 
-fn connect_closest(boxes: &Vec<Box>, n_to_connect: usize) -> Vec<Circuit> {
+fn connect_closest(boxes: &Vec<Box>, n_to_connect: usize) -> Vec<Circuit<'_>> {
     let sorted_by_distance = sorted_distances(boxes);
 
     let mut circuits: Vec<Circuit> = vec![];
     sorted_by_distance
         .iter()
         .take(n_to_connect)
-        .for_each(|(a, b, _)| {
-            let idx_a = circuits.iter().position(|c| c.contains(*a));
-            let circ_a = if let Some(idx_a) = idx_a {
-                circuits.swap_remove(idx_a)
+        .for_each(|&(a, b, _)| {
+            let idx_a = circuits.iter().position(|c| c.contains(a));
+            let circ_a = if idx_a.is_some() {
+                circuits.swap_remove(idx_a.unwrap())
             } else {
-                HashSet::from([(*a).clone()])
+                HashSet::from([a])
             };
 
-            let idx_b = circuits.iter().position(|c| c.contains(*b));
-            let circ_b = if let Some(idx_b) = idx_b {
-                circuits.swap_remove(idx_b)
+            let idx_b = circuits.iter().position(|c| c.contains(b));
+            let circ_b = if idx_b.is_some() {
+                circuits.swap_remove(idx_b.unwrap())
             } else {
-                HashSet::from([(*b).clone()])
+                HashSet::from([b])
             };
 
-            let union: Circuit = circ_a.union(&circ_b).cloned().collect();
+            let union = circ_a.into_iter().chain(circ_b.into_iter()).collect();
             circuits.push(union);
         });
 
