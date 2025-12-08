@@ -21,6 +21,24 @@ fn solve_1(input: &str, n_to_connect: usize) -> usize {
     circuit_sizes[0..3].iter().product()
 }
 
+fn solve_2(input: &str) -> i64 {
+    let boxes = parse_boxes(input);
+    let sorted_by_distance = sorted_distances(&boxes);
+
+    let mut circuits: Vec<Circuit> = vec![];
+
+    let mut i = 0;
+    while circuits.len() == 0 || circuits[0].len() < boxes.iter().len() {
+        let (a, b, _) = sorted_by_distance[i];
+        i += 1;
+        connect_pair(&mut circuits, a, b)
+    }
+
+    let (a, b, _)  = sorted_by_distance[i-1];
+    println!("{:?} {:?}", a, b);
+    a[0] * b[0]
+}
+
 type Box = [i64; 3];
 type Circuit<'a> = HashSet<&'a Box>;
 
@@ -139,4 +157,9 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "90036");
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 25272);
 }
