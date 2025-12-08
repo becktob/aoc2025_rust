@@ -22,19 +22,21 @@ fn solve_1(input: &str, n_to_connect: usize) -> usize {
 
 fn solve_2(input: &str) -> i64 {
     let boxes = parse_boxes(input);
-    let sorted_by_distance = sorted_distances(&boxes);
-
-    let mut circuits: Vec<Circuit> = vec![];
-
-    let mut i = 0;
     let total_boxes = boxes.iter().len();
-    while circuits.first().map_or(0, HashSet::len) < total_boxes {
-        let (a, b, _) = sorted_by_distance[i];
-        i += 1;
-        connect_pair(&mut circuits, a, b)
-    }
 
-    let (a, b, _) = sorted_by_distance[i - 1];
+    let (a, b) = sorted_distances(&boxes)
+        .into_iter()
+        .scan(vec![], |circuits, (a, b, _)| {
+            if circuits.first().map_or(0, HashSet::len) < total_boxes {
+                connect_pair(circuits, a, b);
+                Some((a, b))
+            } else {
+                None
+            }
+        })
+        .last()
+        .unwrap();
+
     a[0] * b[0]
 }
 
