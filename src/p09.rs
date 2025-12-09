@@ -43,7 +43,7 @@ fn solve_2(input: &str) -> u64 {
         .next()
         .unwrap();
 
-    println!("{:?}", (a, b));
+    // println!("{:?}", (a, b));
     rectangle_size(a, b)
 }
 
@@ -72,7 +72,7 @@ fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
         .next();
 
     if let Some(tile) = tile_not_in_contour {
-        println!("{:?} is not in contour", tile);
+        //println!("{:?} is not in contour", tile);
     }
 
     tile_not_in_contour.is_none()
@@ -280,14 +280,5 @@ fn test_solve_2_example() {
 //#[ignore]
 #[test]
 fn test_solve_2() {
-    let solution = solve(true);
-    let locked_cache = TILE_IN_CONTOUR_CACHE.lock().unwrap();
-    let hits;
-    unsafe {
-        hits = CACHE_HITS;
-    }
-    println!("{:?} items, {:?} hits", locked_cache.len(), hits);
-    assert_eq!(solution, "42");
-
-    // 4621384368 too high
+    assert_eq!(solve(true), "1525241870");
 }
