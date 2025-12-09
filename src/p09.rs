@@ -1,5 +1,7 @@
 use crate::rational::Rational;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::hash::{BuildHasherDefault, DefaultHasher};
+use std::sync::Mutex;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
@@ -94,7 +96,17 @@ fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<Intersection> {
     }
 }
 
+static TILE_IN_CONTOUR_CACHE: Mutex<HashMap<Tile, bool, BuildHasherDefault<DefaultHasher>>> =
+    Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
+static mut CACHE_HITS: usize = 0;
 fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
+    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(t) {
+        unsafe {
+            CACHE_HITS += 1;
+        }
+        return *cache_val;
+    }
+
     // Todo: what about tiles exactly diagnally beyond a corner?
     let origin = (0, 0);
     let intersections: Vec<_> = contour
@@ -107,11 +119,14 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
     let rational_tile = (Rational::new(t.0, 1), Rational::new(t.1, 1));
     let tile_is_last_intersection = unique_intersections.contains(&rational_tile);
 
-    if tile_is_last_intersection && unique_intersections.len() > 1 {
+    let in_contour = if tile_is_last_intersection && unique_intersections.len() > 1 {
         unique_intersections.len() % 2 == 0
     } else {
         unique_intersections.len() % 2 == 1
-    }
+    };
+
+    TILE_IN_CONTOUR_CACHE.lock().unwrap().insert(t.clone(), in_contour);
+    in_contour
 }
 
 fn parse(input: &str) -> Floor {
@@ -232,8 +247,17 @@ fn test_solve_2_example() {
     assert_eq!(solve_2(&EXAMPLE), 24);
 }
 
+//#[ignore]
 #[test]
 fn test_solve_2() {
-    assert_eq!(solve(true), "42")
+    let solution = solve(true);
+    let locked_cache = TILE_IN_CONTOUR_CACHE.lock().unwrap();
+    let hits;
+    unsafe {
+        hits = CACHE_HITS;
+    }
+    println!("{:?} items, {:?} hits", locked_cache.len(), hits);
+
+    assert_eq!(solution, "42");
     // 4621384368 too high
 }
