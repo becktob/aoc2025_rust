@@ -1,3 +1,5 @@
+use std::iter;
+
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
@@ -58,6 +60,7 @@ fn segments_intersect(l1: &LineSeg, l2: &LineSeg) -> bool {
 }
 
 fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
+    // Todo: what about tiles exactly diagnally beyond a corner?
     let origin = (0, 0);
     let lines_crossed = contour
         .iter()
@@ -73,6 +76,14 @@ fn parse(input: &str) -> Floor {
             let numbers: Vec<_> = line.split(',').map(|s| s.parse().unwrap()).collect();
             (numbers[0], numbers[1])
         })
+        .collect()
+}
+
+fn contour(floor: &Floor) -> Contour {
+    floor
+        .iter()
+        .zip(floor[1..].iter().chain(floor[0..1].iter()))
+        .map(|(a, b)| (a, b))
         .collect()
 }
 
@@ -137,11 +148,7 @@ fn test_segments_intersect_on_line() {
 #[test]
 fn test_tile_in_countour() {
     let floor = parse(EXAMPLE);
-    let contour: Contour = floor
-        .iter()
-        .zip(floor[1..].iter())
-        .map(|(a, b)| (a, b))
-        .collect();
+    let contour: Contour = contour(&floor);
     let tile_truly_inside = (3, 4);
     let corner_tile = floor[0];
     let tile_beyond_contour = (15, 15);
