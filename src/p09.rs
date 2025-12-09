@@ -1,11 +1,10 @@
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_08.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //solve_1(&input, 1000).to_string()
+        solve_1(&input).to_string()
     }
 }
 
@@ -38,6 +37,7 @@ fn parse(input: &str) -> Floor {
         .collect()
 }
 
+#[cfg(test)]
 static EXAMPLE: &str = "7,1
 11,1
 11,7
@@ -66,4 +66,9 @@ fn test_rectangle_size() {
 #[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(&EXAMPLE), 50);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "4759930955")
 }
