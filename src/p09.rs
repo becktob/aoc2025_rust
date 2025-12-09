@@ -45,9 +45,16 @@ fn rect_in_contour(rect: &Rectangle, contour: &Contour) -> bool {
     let max_x = rect.0.0.max(rect.1.0);
     let min_y = rect.0.1.min(rect.1.1);
     let max_y = rect.0.1.max(rect.1.1);
-    (min_x..=max_x)
+    let tile_not_in_contour = (min_x..=max_x)
         .flat_map(|x| (min_y..=max_y).map(move |y| (x, y)))
-        .all(|tile| tile_in_contour(&tile, contour))
+        .filter(|tile| !tile_in_contour(&tile, contour))
+        .next();
+
+    if let Some(tile) = tile_not_in_contour {
+        println!("{:?} is not in contour", tile);
+    }
+
+    tile_not_in_contour.is_none()
 }
 
 type Tile = (i64, i64);
@@ -72,7 +79,10 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
 }
 
 fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
-    let mut vertical_walls: HashMap<i64, Vec<i64>> = HashMap::new();
+    let mut vertical_walls: HashMap<i64, Vec<(i64, bool)>> = HashMap::new();
+
+    // if the last vertical wall to the left was going up -> inside; down -> outside
+    // (for a clockwise loop)
 
     contour
         .iter()
@@ -81,28 +91,25 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
             let x = vertical_line.0.0;
             let y_min = vertical_line.0.1.min(vertical_line.1.1);
             let y_max = vertical_line.0.1.max(vertical_line.1.1);
+            let upwards = vertical_line.0.1 < vertical_line.1.1;
             (y_min..=y_max).for_each(|y| {
-                vertical_walls.entry(y).or_insert(vec![]).push(x);
+                vertical_walls.entry(y).or_insert(vec![]).push((x, upwards));
             })
         });
 
     vertical_walls.iter_mut().for_each(|(_, v)| v.sort());
 
     let empty = vec![];
-    let crossed_walls: Vec<_> = vertical_walls
+    let last_crossed_wall = vertical_walls
         .get(&t.1)
         .unwrap_or(&empty)
         .iter()
-        .take_while(|&&wall_y| wall_y <= t.0)
-        .collect();
+        .take_while(|&&(wall_y, up)| wall_y <= t.0)
+        .last();
 
-    let tile_is_last_intersection = crossed_walls.contains(&&t.0);
-
-    if tile_is_last_intersection && crossed_walls.len() > 1 {
-        crossed_walls.len() % 2 == 0
-    } else {
-        crossed_walls.len() % 2 == 1
-    }
+    let is_on_wall = last_crossed_wall.is_some_and(|last_wall| last_wall.0 == t.0);
+    let is_inside = last_crossed_wall.is_some_and(|last_wall| !last_wall.1);
+    is_on_wall || is_inside
 }
 
 fn parse(input: &str) -> Floor {
@@ -159,7 +166,7 @@ fn test_rectangle_inner_contains() {
 }
 
 #[test]
-fn test_tile_in_countour() {
+fn test_tile_in_contour() {
     let floor = parse(EXAMPLE);
     let contour: Contour = contour(&floor);
     let tile_truly_inside = (3, 4);
@@ -172,8 +179,31 @@ fn test_tile_in_countour() {
     assert!(!tile_in_contour(&tile_beyond_contour, &contour));
 
     floor.iter().for_each(|tile| {
+        println!("{:?}", tile);
         assert!(tile_in_contour(&tile, &contour));
     })
+}
+
+#[test]
+fn test_tile_in_contour_inner() {
+    let floor = parse(EXAMPLE);
+    let contour: Contour = contour(&floor);
+    assert!(tile_in_contour(&(8, 3), &contour));
+}
+
+#[test]
+fn test_tile_in_contour_11_1() {
+    let floor = parse(EXAMPLE);
+    let contour: Contour = contour(&floor);
+    assert!(tile_in_contour(&(11, 1), &contour));
+}
+
+#[test]
+fn test_rect_in_contour() {
+    let floor = parse(EXAMPLE);
+    let contour: Contour = contour(&floor);
+    let example_rectangle = (&(9, 5), &(2, 3)); // example solution to part 2
+    assert!(rect_in_contour(&example_rectangle, &contour));
 }
 
 #[test]
