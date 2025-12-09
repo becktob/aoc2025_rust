@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
@@ -53,17 +54,20 @@ fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
     let tile_not_in_contour = (min_y..=max_y)
         .filter_map(|y| {
             let walls_this_line = wall_directions.get(&y).unwrap_or(&no_walls);
-            let mut walls_in_rect: Vec<_> = walls_this_line
+            let walls_in_rect = walls_this_line
                 .iter()
-                .filter(|(wall_x, _)| min_x < *wall_x && *wall_x < max_x)
-                .collect();
+                .filter(|(wall_x, _)| min_x < *wall_x && *wall_x < max_x);
+
             let wall_left_of_rect = walls_this_line
                 .iter()
                 .take_while(|(wall_x, _)| *wall_x <= min_x)
                 .last()
                 .unwrap_or(&(0, true));
-            walls_in_rect.push(wall_left_of_rect);
-            let not_in_contour = walls_in_rect.iter().filter(|(_, up)| *up).next();
+
+            let not_in_contour = walls_in_rect
+                .chain(iter::once(wall_left_of_rect))
+                .filter(|(_, up)| *up)
+                .next();
             not_in_contour.map(|(x, _)| (x, y))
         })
         .next();
