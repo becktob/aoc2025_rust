@@ -24,6 +24,8 @@ type Tile = (i64, i64);
 type LineSeg<'a> = (&'a Tile, &'a Tile);
 type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
+type Contour<'a> = Vec<LineSeg<'a>>;
+
 
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
@@ -53,6 +55,15 @@ fn segments_intersect(l1: &LineSeg, l2: &LineSeg) -> bool {
     let on_2 = u_num.signum() == den.signum() && u_num.abs() <= den.abs();
 
     on_1 && on_2
+}
+
+fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
+    let origin = (0, 0);
+    let lines_crossed = contour
+        .iter()
+        .filter(|&l| segments_intersect(l, &(&origin, t)))
+        .count();
+    lines_crossed % 2 == 1
 }
 
 fn parse(input: &str) -> Floor {
@@ -101,24 +112,42 @@ fn test_rectangle_inner_contains() {
 }
 
 #[test]
-fn test_segments_intersect(){
+fn test_segments_intersect() {
     let line = (&(10, 5), &(10, 10));
     let origin = &(0, 0);
     let point_above_line = &(11, 8);
     let point_below_line = &(9, 7);
 
-    assert!(segments_intersect(&line, &(point_below_line, point_above_line)));
+    assert!(segments_intersect(
+        &line,
+        &(point_below_line, point_above_line)
+    ));
     assert!(segments_intersect(&line, &(origin, point_above_line)));
     assert!(!segments_intersect(&line, &(origin, point_below_line)));
 }
 
 #[test]
-fn test_segments_intersect_on_line(){
+fn test_segments_intersect_on_line() {
     let line = (&(10, 5), &(10, 10));
     let origin = &(0, 0);
     let point_on_line = &(10, 8);
     assert!(segments_intersect(&line, &(origin, point_on_line)));
+}
 
+#[test]
+fn test_tile_in_countour() {
+    let floor = parse(EXAMPLE);
+    let contour: Contour = floor
+        .iter()
+        .zip(floor[1..].iter())
+        .map(|(a, b)| (a, b))
+        .collect();
+    let tile_truly_inside = (3, 4);
+    let corner_tile = floor[0];
+    let tile_beyond_contour = (15, 15);
+    assert!(tile_in_countour(&tile_truly_inside, &contour));
+    assert!(!tile_in_countour(&corner_tile, &contour));
+    assert!(!tile_in_countour(&tile_beyond_contour, &contour))
 }
 
 #[test]
