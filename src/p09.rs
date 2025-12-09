@@ -1,7 +1,4 @@
-use crate::rational::Rational;
-use std::collections::{HashMap, HashSet};
-use std::hash::{BuildHasherDefault, DefaultHasher};
-use std::sync::Mutex;
+use std::collections::HashMap;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
@@ -71,10 +68,6 @@ fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
         })
         .next();
 
-    if let Some(tile) = tile_not_in_contour {
-        //println!("{:?} is not in contour", tile);
-    }
-
     tile_not_in_contour.is_none()
 }
 
@@ -84,57 +77,8 @@ type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
 type Contour<'a> = Vec<LineSeg<'a>>;
 
-type Intersection = (Rational, Rational);
-
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
-}
-
-fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
-    let (a, b) = rectangle;
-    let xmax = a.0.max(b.0);
-    let xmin = a.0.min(b.0);
-    let ymax = a.1.max(b.1);
-    let ymin = a.1.min(b.1);
-    xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
-}
-
-static TILE_IN_CONTOUR_CACHE: Mutex<HashMap<Tile, bool, BuildHasherDefault<DefaultHasher>>> =
-    Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
-static mut CACHE_HITS: usize = 0;
-
-fn tile_in_contour(t: &Tile, vertical_walls: &WallDirections) -> bool {
-    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(t) {
-        unsafe {
-            CACHE_HITS += 1;
-        }
-        return *cache_val;
-    }
-
-    let in_contour = tile_in_contour_(t, vertical_walls);
-
-    TILE_IN_CONTOUR_CACHE
-        .lock()
-        .unwrap()
-        .insert(t.clone(), in_contour);
-    in_contour
-}
-
-fn tile_in_contour_(t: &Tile, vertical_walls: &WallDirections) -> bool {
-    // if the last vertical wall to the left was going up -> inside; down -> outside
-    // (for a clockwise loop)
-
-    let empty = vec![];
-    let last_crossed_wall = vertical_walls
-        .get(&t.1)
-        .unwrap_or(&empty)
-        .iter()
-        .take_while(|&&(wall_x, _)| wall_x <= t.0)
-        .last();
-
-    let is_on_wall = last_crossed_wall.is_some_and(|last_wall| last_wall.0 == t.0);
-    let is_inside = last_crossed_wall.is_some_and(|last_wall| !last_wall.1);
-    is_on_wall || is_inside
 }
 
 type WallDirections = HashMap<i64, Vec<(i64, bool)>>;
@@ -201,48 +145,6 @@ fn test_rectangle_size() {
     assert_eq!(rectangle_size(&(2, 5), &(9, 7)), 24);
     assert_eq!(rectangle_size(&(7, 1), &(11, 7)), 35);
     assert_eq!(rectangle_size(&(2, 5), &(11, 1)), 50);
-}
-
-#[test]
-fn test_rectangle_inner_contains() {
-    let largest_example_rectangle = (&(2, 5), &(11, 1));
-    assert!(rectangle_inner_contains(
-        &largest_example_rectangle,
-        &(7, 3)
-    ))
-}
-
-#[test]
-fn test_tile_in_contour() {
-    let floor = parse(EXAMPLE);
-    let wall_directions = vertical_wall_directions(&floor);
-    let tile_truly_inside = (3, 4);
-    let first_corner = floor[0];
-    let middle_corner = floor[4];
-    let tile_beyond_contour = (12, 12);
-    assert!(tile_in_contour(&tile_truly_inside, &wall_directions));
-    assert!(tile_in_contour(&first_corner, &wall_directions)); // breaks when contour is closed
-    assert!(tile_in_contour(&middle_corner, &wall_directions));
-    assert!(!tile_in_contour(&tile_beyond_contour, &wall_directions));
-
-    floor.iter().for_each(|tile| {
-        println!("{:?}", tile);
-        assert!(tile_in_contour(&tile, &wall_directions));
-    })
-}
-
-#[test]
-fn test_tile_in_contour_inner() {
-    let floor = parse(EXAMPLE);
-    let wall_directions = vertical_wall_directions(&floor);
-    assert!(tile_in_contour(&(8, 3), &wall_directions));
-}
-
-#[test]
-fn test_tile_in_contour_11_1() {
-    let floor = parse(EXAMPLE);
-    let wall_directions = vertical_wall_directions(&floor);
-    assert!(tile_in_contour(&(11, 1), &wall_directions));
 }
 
 #[test]

@@ -9,7 +9,6 @@ mod p06;
 mod p07;
 mod p08;
 mod p09;
-mod rational;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
