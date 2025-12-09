@@ -23,6 +23,31 @@ fn solve_1(input: &str) -> u64 {
         .unwrap()
 }
 
+fn solve_2(input: &str) -> u64 {
+    let floor = parse(input);
+    let contour = contour(&floor);
+
+    let (a, b) = floor
+        .iter()
+        .enumerate()
+        .flat_map(|(i, tile)| floor[i + 1..].iter().map(move |other| (tile, other)))
+        .filter(|rect| {
+            // Todo: strictly, need to check *all* tiles inside rect
+            // checking the two remaining corners is sufficient for example...
+            let corner_3 = (rect.0.0, rect.1.1);
+            let corner_4 = (rect.1.0, rect.0.1);
+            tile_in_countour(rect.0, &contour)
+                && tile_in_countour(rect.1, &contour)
+                && tile_in_countour(&corner_3, &contour)
+                && tile_in_countour(&corner_4, &contour)
+        })
+        .max_by(|(a, b), (c, d)| rectangle_size(a, b).cmp(&rectangle_size(c, d)))
+        .unwrap();
+
+    println!("{:?}", (a, b));
+    rectangle_size(a, b)
+}
+
 type Tile = (i64, i64);
 type LineSeg<'a> = (&'a Tile, &'a Tile);
 type Rectangle<'a> = (&'a Tile, &'a Tile);
@@ -199,4 +224,9 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "4759930955")
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(&EXAMPLE), 24);
 }
