@@ -39,7 +39,7 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
-fn segments_intersect(l1: &LineSeg, l2: &LineSeg) -> bool {
+fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<(f64, f64)> {
     // Todo: sweep line alogrithm?
     // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
     let ((x1, y1), (x2, y2)) = l1;
@@ -48,22 +48,28 @@ fn segments_intersect(l1: &LineSeg, l2: &LineSeg) -> bool {
     let t_num = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
     let u_num = -(x1 - x2) * (y1 - y3) + (y1 - y2) * (x1 - x3);
     let den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    // todo: den == 0?
 
     // Need t=t_num/den in 0..1:
-    let on_1 = t_num.signum() == den.signum() && t_num.abs() <= den.abs();
-    let on_2 = u_num.signum() == den.signum() && u_num.abs() <= den.abs();
+    let on_1 = t_num == 0 || (t_num.signum() == den.signum() && t_num.abs() <= den.abs());
+    let on_2 = u_num == 0 || (u_num.signum() == den.signum() && u_num.abs() <= den.abs());
 
-    on_1 && on_2
+    if on_1 && on_2 {
+        let t = t_num / den;
+        Some(((x1 + t * (x2 - x1)) as f64, (y1 + t * (y2 - y1)) as f64))
+    }
+    else { None }
 }
 
 fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
     // Todo: what about tiles exactly diagnally beyond a corner?
     let origin = (0, 0);
-    let lines_crossed = contour
+    let intersections: Vec<_> = contour
         .iter()
-        .filter(|&l| segments_intersect(l, &(&origin, t)))
-        .count();
-    lines_crossed % 2 == 1
+        .filter_map(|l| intersection(&l, &(&origin, t)))
+        .collect();
+
+    intersections.len() % 2 == 1
 }
 
 fn parse(input: &str) -> Floor {
@@ -79,7 +85,7 @@ fn parse(input: &str) -> Floor {
 fn contour(floor: &Floor) -> Contour {
     floor
         .iter()
-        .zip(floor[1..].iter().chain(floor[0..1].iter()))
+        .zip(floor[1..].iter().chain(floor[..1].iter()))
         .map(|(a, b)| (a, b))
         .collect()
 }
@@ -126,17 +132,28 @@ fn test_segments_intersect() {
     let above_line = &(11, 8);
     let below_line = &(9, 7);
 
-    assert!(segments_intersect(&line, &(below_line, above_line)));
-    assert!(segments_intersect(&line, &(origin, above_line)));
-    assert!(!segments_intersect(&line, &(origin, below_line)));
+    assert!(intersection(&line, &(below_line, above_line)).is_some());
+    assert!(intersection(&line, &(origin, above_line)).is_some());
+    assert!(!intersection(&line, &(origin, below_line)).is_some());
 }
 
 #[test]
 fn test_segments_intersect_on_line() {
     let line = (&(10, 5), &(10, 10));
-    let origin = &(0, 0);
     let point_on_line = &(10, 8);
-    assert!(segments_intersect(&line, &(origin, point_on_line)));
+    assert!(intersection(&line, &(&(0, 0), point_on_line)).is_some());
+}
+
+#[test]
+fn test_segments_intersect_on_line_beginning() {
+    let line = (&(10, 5), &(10, 10));
+    assert!(intersection(&line, &(&(0, 0), line.0)).is_some());
+}
+
+#[test]
+fn test_segments_intersect_on_line_end() {
+    let line = (&(10, 5), &(10, 10));
+    assert!(intersection(&line, &(&(0, 0), line.1)).is_some());
 }
 
 #[test]
@@ -144,10 +161,12 @@ fn test_tile_in_countour() {
     let floor = parse(EXAMPLE);
     let contour: Contour = contour(&floor);
     let tile_truly_inside = (3, 4);
-    let corner_tile = floor[0];
-    let tile_beyond_contour = (15, 15);
+    let first_corner = floor[0];
+    let middle_corner = floor[4];
+    let tile_beyond_contour = (12, 12);
     assert!(tile_in_countour(&tile_truly_inside, &contour));
-    assert!(!tile_in_countour(&corner_tile, &contour));
+    assert!(tile_in_countour(&first_corner, &contour)); // breaks when contour is closed
+    assert!(tile_in_countour(&middle_corner, &contour));
     assert!(!tile_in_countour(&tile_beyond_contour, &contour))
 }
 
