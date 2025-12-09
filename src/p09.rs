@@ -54,18 +54,18 @@ fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
     let tile_not_in_contour = (min_y..=max_y)
         .filter_map(|y| {
             let Some(walls_this_line) = wall_directions.get(&y) else { return None };
-            let walls_in_rect = walls_this_line
-                .iter()
-                .filter(|(wall_x, _)| min_x < *wall_x && *wall_x < max_x);
-
             let wall_left_of_rect = walls_this_line
                 .iter()
                 .take_while(|(wall_x, _)| *wall_x <= min_x)
                 .last()
                 .unwrap_or(&(0, true));
 
-            let not_in_contour = walls_in_rect
-                .chain(iter::once(wall_left_of_rect))
+            let walls_in_rect = walls_this_line
+                .iter()
+                .filter(|(wall_x, _)| min_x < *wall_x && *wall_x < max_x);
+
+            let not_in_contour = iter::once(wall_left_of_rect)
+                .chain(walls_in_rect)
                 .filter(|(_, up)| *up)
                 .next();
             not_in_contour.map(|(x, _)| (x, y))
