@@ -43,10 +43,10 @@ fn rect_in_contour(rect: &Rectangle, contour: &Contour) -> bool {
     // checking the two remaining corners is sufficient for example...
     let corner_3 = (rect.0.0, rect.1.1);
     let corner_4 = (rect.1.0, rect.0.1);
-    tile_in_countour(rect.0, &contour)
-        && tile_in_countour(rect.1, &contour)
-        && tile_in_countour(&corner_3, &contour)
-        && tile_in_countour(&corner_4, &contour)
+    tile_in_contour(rect.0, &contour)
+        && tile_in_contour(rect.1, &contour)
+        && tile_in_contour(&corner_3, &contour)
+        && tile_in_contour(&corner_4, &contour)
 }
 
 type Tile = (i64, i64);
@@ -94,7 +94,7 @@ fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<Intersection> {
     }
 }
 
-fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
+fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
     // Todo: what about tiles exactly diagnally beyond a corner?
     let origin = (0, 0);
     let intersections: Vec<_> = contour
@@ -207,13 +207,13 @@ fn test_tile_in_countour() {
     let first_corner = floor[0];
     let middle_corner = floor[4];
     let tile_beyond_contour = (12, 12);
-    assert!(tile_in_countour(&tile_truly_inside, &contour));
-    assert!(tile_in_countour(&first_corner, &contour)); // breaks when contour is closed
-    assert!(tile_in_countour(&middle_corner, &contour));
-    assert!(!tile_in_countour(&tile_beyond_contour, &contour));
+    assert!(tile_in_contour(&tile_truly_inside, &contour));
+    assert!(tile_in_contour(&first_corner, &contour)); // breaks when contour is closed
+    assert!(tile_in_contour(&middle_corner, &contour));
+    assert!(!tile_in_contour(&tile_beyond_contour, &contour));
 
     floor.iter().for_each(|tile| {
-        assert!(tile_in_countour(&tile, &contour));
+        assert!(tile_in_contour(&tile, &contour));
     })
 }
 
