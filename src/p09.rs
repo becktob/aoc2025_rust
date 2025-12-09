@@ -71,66 +71,6 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
-fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<Intersection> {
-    // Todo: sweep line alogrithm?
-    // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-    let ((x1, y1), (x2, y2)) = l1;
-    let ((x3, y3), (x4, y4)) = l2;
-
-    let t_num = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
-    let u_num = -(x1 - x2) * (y1 - y3) + (y1 - y2) * (x1 - x3);
-    let den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-    // todo: den == 0?
-
-    // Need t=t_num/den in 0..1:
-    let on_1 = t_num == 0 || (t_num.signum() == den.signum() && t_num.abs() <= den.abs());
-    let on_2 = u_num == 0 || (u_num.signum() == den.signum() && u_num.abs() <= den.abs());
-
-    if on_1 && on_2 {
-        let x = Rational::new(x1 * den + t_num * (x2 - x1), den);
-        let y = Rational::new(y1 * den + u_num * (y2 - y1), den);
-        Some((x, y))
-    } else {
-        None
-    }
-}
-
-static TILE_IN_CONTOUR_CACHE: Mutex<HashMap<Tile, bool, BuildHasherDefault<DefaultHasher>>> =
-    Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
-static mut CACHE_HITS: usize = 0;
-fn tile_in_contour_from_origin(t: &Tile, contour: &Contour) -> bool {
-    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(t) {
-        unsafe {
-            CACHE_HITS += 1;
-        }
-        return *cache_val;
-    }
-
-    // Todo: what about tiles exactly diagnally beyond a corner?
-    let origin = (0, 0);
-    let intersections: Vec<_> = contour
-        .iter()
-        .filter_map(|l| intersection(&l, &(&origin, t)))
-        .collect();
-
-    let unique_intersections: HashSet<Intersection> = HashSet::from_iter(intersections.into_iter());
-
-    let rational_tile = (Rational::new(t.0, 1), Rational::new(t.1, 1));
-    let tile_is_last_intersection = unique_intersections.contains(&rational_tile);
-
-    let in_contour = if tile_is_last_intersection && unique_intersections.len() > 1 {
-        unique_intersections.len() % 2 == 0
-    } else {
-        unique_intersections.len() % 2 == 1
-    };
-
-    TILE_IN_CONTOUR_CACHE
-        .lock()
-        .unwrap()
-        .insert(t.clone(), in_contour);
-    in_contour
-}
-
 fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
     let mut vertical_walls: HashMap<i64, Vec<i64>> = HashMap::new();
 
@@ -141,13 +81,12 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
             let x = vertical_line.0.0;
             let y_min = vertical_line.0.1.min(vertical_line.1.1);
             let y_max = vertical_line.0.1.max(vertical_line.1.1);
-            (y_min..=y_max)
-                .for_each(|y| {
-                    vertical_walls.entry(y).or_insert(vec![]).push(x);
-                })
+            (y_min..=y_max).for_each(|y| {
+                vertical_walls.entry(y).or_insert(vec![]).push(x);
+            })
         });
 
-    vertical_walls.iter_mut().for_each(|(_, v)| {v.sort()});
+    vertical_walls.iter_mut().for_each(|(_, v)| v.sort());
 
     let empty = vec![];
     let crossed_walls: Vec<_> = vertical_walls
@@ -220,38 +159,6 @@ fn test_rectangle_inner_contains() {
 }
 
 #[test]
-fn test_segments_intersect() {
-    let line = (&(10, 5), &(10, 10));
-    let origin = &(0, 0);
-    let above_line = &(11, 8);
-    let below_line = &(9, 7);
-
-    let int = (Rational::new(10, 1), Rational::new(15, 2)); // (10, 7.5)
-    assert_eq!(intersection(&line, &(below_line, above_line)), Some(int));
-    assert!(intersection(&line, &(origin, above_line)).is_some());
-    assert!(!intersection(&line, &(origin, below_line)).is_some());
-}
-
-#[test]
-fn test_segments_intersect_on_line() {
-    let line = (&(10, 5), &(10, 10));
-    let point_on_line = &(10, 8);
-    assert!(intersection(&line, &(&(0, 0), point_on_line)).is_some());
-}
-
-#[test]
-fn test_segments_intersect_on_line_beginning() {
-    let line = (&(10, 5), &(10, 10));
-    assert!(intersection(&line, &(&(0, 0), line.0)).is_some());
-}
-
-#[test]
-fn test_segments_intersect_on_line_end() {
-    let line = (&(10, 5), &(10, 10));
-    assert!(intersection(&line, &(&(0, 0), line.1)).is_some());
-}
-
-#[test]
 fn test_tile_in_countour() {
     let floor = parse(EXAMPLE);
     let contour: Contour = contour(&floor);
@@ -284,17 +191,9 @@ fn test_solve_2_example() {
     assert_eq!(solve_2(&EXAMPLE), 24);
 }
 
-//#[ignore]
+#[ignore]
 #[test]
 fn test_solve_2() {
-    let solution = solve(true);
-    let locked_cache = TILE_IN_CONTOUR_CACHE.lock().unwrap();
-    let hits;
-    unsafe {
-        hits = CACHE_HITS;
-    }
-    println!("{:?} items, {:?} hits", locked_cache.len(), hits);
-
-    assert_eq!(solution, "42");
+    assert_eq!(solve(true), "42");
     // 4621384368 too high
 }
