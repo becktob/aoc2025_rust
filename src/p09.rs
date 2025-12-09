@@ -1,5 +1,3 @@
-use std::iter;
-
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
@@ -27,7 +25,6 @@ type LineSeg<'a> = (&'a Tile, &'a Tile);
 type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
 type Contour<'a> = Vec<LineSeg<'a>>;
-
 
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
@@ -126,15 +123,12 @@ fn test_rectangle_inner_contains() {
 fn test_segments_intersect() {
     let line = (&(10, 5), &(10, 10));
     let origin = &(0, 0);
-    let point_above_line = &(11, 8);
-    let point_below_line = &(9, 7);
+    let above_line = &(11, 8);
+    let below_line = &(9, 7);
 
-    assert!(segments_intersect(
-        &line,
-        &(point_below_line, point_above_line)
-    ));
-    assert!(segments_intersect(&line, &(origin, point_above_line)));
-    assert!(!segments_intersect(&line, &(origin, point_below_line)));
+    assert!(segments_intersect(&line, &(below_line, above_line)));
+    assert!(segments_intersect(&line, &(origin, above_line)));
+    assert!(!segments_intersect(&line, &(origin, below_line)));
 }
 
 #[test]
