@@ -28,12 +28,19 @@ fn solve_2(input: &str) -> u64 {
     let floor = parse(input);
     let wall_directions = vertical_wall_directions(&floor);
 
-    let (a, b) = floor
+    let mut rectangles: Vec<_> = floor
         .iter()
         .enumerate()
         .flat_map(|(i, tile)| floor[i + 1..].iter().map(move |other| (tile, other)))
+        .collect();
+
+    rectangles.sort_by(|(a, b), (c, d)| rectangle_size(a, b).cmp(&rectangle_size(c, d)));
+    rectangles.reverse();
+
+    let (a, b) = rectangles
+        .iter()
         .filter(|rect| rect_in_contour(rect, &wall_directions))
-        .max_by(|(a, b), (c, d)| rectangle_size(a, b).cmp(&rectangle_size(c, d)))
+        .next()
         .unwrap();
 
     println!("{:?}", (a, b));
@@ -78,7 +85,28 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
+static TILE_IN_CONTOUR_CACHE: Mutex<HashMap<Tile, bool, BuildHasherDefault<DefaultHasher>>> =
+    Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
+static mut CACHE_HITS: usize = 0;
+
 fn tile_in_contour(t: &Tile, vertical_walls: &WallDirections) -> bool {
+    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(t) {
+        unsafe {
+            CACHE_HITS += 1;
+        }
+        return *cache_val;
+    }
+
+    let in_contour = tile_in_contour_(t, vertical_walls);
+
+    TILE_IN_CONTOUR_CACHE
+        .lock()
+        .unwrap()
+        .insert(t.clone(), in_contour);
+    in_contour
+}
+
+fn tile_in_contour_(t: &Tile, vertical_walls: &WallDirections) -> bool {
     // if the last vertical wall to the left was going up -> inside; down -> outside
     // (for a clockwise loop)
 
@@ -96,7 +124,7 @@ fn tile_in_contour(t: &Tile, vertical_walls: &WallDirections) -> bool {
 }
 
 type WallDirections = HashMap<i64, Vec<(i64, bool)>>;
-fn vertical_wall_directions(floor: &Floor) ->  WallDirections{
+fn vertical_wall_directions(floor: &Floor) -> WallDirections {
     let mut vertical_walls = HashMap::new();
 
     contour(floor)
@@ -226,9 +254,17 @@ fn test_solve_2_example() {
     assert_eq!(solve_2(&EXAMPLE), 24);
 }
 
-#[ignore]
+//#[ignore]
 #[test]
 fn test_solve_2() {
-    assert_eq!(solve(true), "42");
+    let solution = solve(true);
+    let locked_cache = TILE_IN_CONTOUR_CACHE.lock().unwrap();
+    let hits;
+    unsafe {
+        hits = CACHE_HITS;
+    }
+    println!("{:?} items, {:?} hits", locked_cache.len(), hits);
+    assert_eq!(solution, "42");
+
     // 4621384368 too high
 }
