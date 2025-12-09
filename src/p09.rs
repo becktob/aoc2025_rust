@@ -21,10 +21,20 @@ fn solve_1(input: &str) -> u64 {
 }
 
 type Tile = (i64, i64);
+type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
 
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
+}
+
+fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
+    let (a, b) = rectangle;
+    let xmax = a.0.max(b.0);
+    let xmin = a.0.min(b.0);
+    let ymax = a.1.max(b.1);
+    let ymin = a.1.min(b.1);
+    xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
 fn parse(input: &str) -> Floor {
@@ -61,6 +71,12 @@ fn test_rectangle_size() {
     assert_eq!(rectangle_size(&(2, 5), &(9, 7)), 24);
     assert_eq!(rectangle_size(&(7, 1), &(11, 7)), 35);
     assert_eq!(rectangle_size(&(2, 5), &(11, 1)), 50);
+}
+
+#[test]
+fn test_rectangle_inner_contains(){
+    let largest_example_rectangle = (&(2, 5), &(11, 1));
+    assert!(rectangle_inner_contains(&largest_example_rectangle, &(7,3)))
 }
 
 #[test]
