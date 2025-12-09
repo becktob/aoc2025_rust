@@ -98,7 +98,7 @@ fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<Intersection> {
 static TILE_IN_CONTOUR_CACHE: Mutex<HashMap<Tile, bool, BuildHasherDefault<DefaultHasher>>> =
     Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
 static mut CACHE_HITS: usize = 0;
-fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
+fn tile_in_contour_from_origin(t: &Tile, contour: &Contour) -> bool {
     if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(t) {
         unsafe {
             CACHE_HITS += 1;
@@ -129,6 +129,41 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
         .unwrap()
         .insert(t.clone(), in_contour);
     in_contour
+}
+
+fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
+    let mut vertical_walls: HashMap<i64, Vec<i64>> = HashMap::new();
+
+    contour
+        .iter()
+        .filter(|line| line.0.0 == line.1.0)
+        .for_each(|vertical_line| {
+            let x = vertical_line.0.0;
+            let y_min = vertical_line.0.1.min(vertical_line.1.1);
+            let y_max = vertical_line.0.1.max(vertical_line.1.1);
+            (y_min..=y_max)
+                .for_each(|y| {
+                    vertical_walls.entry(y).or_insert(vec![]).push(x);
+                })
+        });
+
+    vertical_walls.iter_mut().for_each(|(_, v)| {v.sort()});
+
+    let empty = vec![];
+    let crossed_walls: Vec<_> = vertical_walls
+        .get(&t.1)
+        .unwrap_or(&empty)
+        .iter()
+        .take_while(|&&wall_y| wall_y <= t.0)
+        .collect();
+
+    let tile_is_last_intersection = crossed_walls.contains(&&t.0);
+
+    if tile_is_last_intersection && crossed_walls.len() > 1 {
+        crossed_walls.len() % 2 == 0
+    } else {
+        crossed_walls.len() % 2 == 1
+    }
 }
 
 fn parse(input: &str) -> Floor {
