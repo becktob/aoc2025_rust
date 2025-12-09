@@ -124,7 +124,7 @@ fn parse(input: &str) -> Floor {
         .collect()
 }
 
-fn contour(floor: &Floor) -> Contour {
+fn contour(floor: &'_ Floor) -> Contour<'_> {
     floor
         .iter()
         .zip(floor[1..].iter().chain(floor[..1].iter()))
