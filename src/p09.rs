@@ -79,10 +79,27 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
 }
 
 fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
-    let mut vertical_walls: HashMap<i64, Vec<(i64, bool)>> = HashMap::new();
-
     // if the last vertical wall to the left was going up -> inside; down -> outside
     // (for a clockwise loop)
+
+    let vertical_walls = vertical_wall_directions(contour);
+
+    let empty = vec![];
+    let last_crossed_wall = vertical_walls
+        .get(&t.1)
+        .unwrap_or(&empty)
+        .iter()
+        .take_while(|&&(wall_y, up)| wall_y <= t.0)
+        .last();
+
+    let is_on_wall = last_crossed_wall.is_some_and(|last_wall| last_wall.0 == t.0);
+    let is_inside = last_crossed_wall.is_some_and(|last_wall| !last_wall.1);
+    is_on_wall || is_inside
+}
+
+type WallDirections = HashMap<i64, Vec<(i64, bool)>>;
+fn vertical_wall_directions(contour: &Contour) ->  WallDirections{
+    let mut vertical_walls = HashMap::new();
 
     contour
         .iter()
@@ -99,17 +116,7 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
 
     vertical_walls.iter_mut().for_each(|(_, v)| v.sort());
 
-    let empty = vec![];
-    let last_crossed_wall = vertical_walls
-        .get(&t.1)
-        .unwrap_or(&empty)
-        .iter()
-        .take_while(|&&(wall_y, up)| wall_y <= t.0)
-        .last();
-
-    let is_on_wall = last_crossed_wall.is_some_and(|last_wall| last_wall.0 == t.0);
-    let is_inside = last_crossed_wall.is_some_and(|last_wall| !last_wall.1);
-    is_on_wall || is_inside
+    vertical_walls
 }
 
 fn parse(input: &str) -> Floor {
