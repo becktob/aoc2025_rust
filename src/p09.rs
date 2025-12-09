@@ -1,3 +1,6 @@
+use crate::rational::Rational;
+use std::collections::HashSet;
+
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
@@ -26,6 +29,8 @@ type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
 type Contour<'a> = Vec<LineSeg<'a>>;
 
+type Intersection = (Rational, Rational);
+
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
 }
@@ -39,7 +44,7 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
-fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<(f64, f64)> {
+fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<Intersection> {
     // Todo: sweep line alogrithm?
     // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
     let ((x1, y1), (x2, y2)) = l1;
@@ -55,10 +60,12 @@ fn intersection(l1: &LineSeg, l2: &LineSeg) -> Option<(f64, f64)> {
     let on_2 = u_num == 0 || (u_num.signum() == den.signum() && u_num.abs() <= den.abs());
 
     if on_1 && on_2 {
-        let t = t_num / den;
-        Some(((x1 + t * (x2 - x1)) as f64, (y1 + t * (y2 - y1)) as f64))
+        let x = Rational::new(x1 * den + t_num * (x2 - x1), den);
+        let y = Rational::new(y1 * den + u_num * (y2 - y1), den);
+        Some((x, y))
+    } else {
+        None
     }
-    else { None }
 }
 
 fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
@@ -69,7 +76,9 @@ fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
         .filter_map(|l| intersection(&l, &(&origin, t)))
         .collect();
 
-    intersections.len() % 2 == 1
+    let unique_intersections: HashSet<Intersection> = HashSet::from_iter(intersections.into_iter());
+
+    unique_intersections.len() % 2 == 1
 }
 
 fn parse(input: &str) -> Floor {
@@ -132,7 +141,8 @@ fn test_segments_intersect() {
     let above_line = &(11, 8);
     let below_line = &(9, 7);
 
-    assert!(intersection(&line, &(below_line, above_line)).is_some());
+    let int = (Rational::new(10, 1), Rational::new(15, 2));  // (10, 7.5)
+    assert_eq!(intersection(&line, &(below_line, above_line)), Some(int));
     assert!(intersection(&line, &(origin, above_line)).is_some());
     assert!(!intersection(&line, &(origin, below_line)).is_some());
 }
