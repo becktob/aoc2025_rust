@@ -78,7 +78,14 @@ fn tile_in_countour(t: &Tile, contour: &Contour) -> bool {
 
     let unique_intersections: HashSet<Intersection> = HashSet::from_iter(intersections.into_iter());
 
-    unique_intersections.len() % 2 == 1
+    let rational_tile = (Rational::new(t.0, 1), Rational::new(t.1, 1));
+    let tile_is_last_intersection = unique_intersections.contains(&rational_tile);
+
+    if tile_is_last_intersection && unique_intersections.len() > 1 {
+        unique_intersections.len() % 2 == 0
+    } else {
+        unique_intersections.len() % 2 == 1
+    }
 }
 
 fn parse(input: &str) -> Floor {
@@ -141,7 +148,7 @@ fn test_segments_intersect() {
     let above_line = &(11, 8);
     let below_line = &(9, 7);
 
-    let int = (Rational::new(10, 1), Rational::new(15, 2));  // (10, 7.5)
+    let int = (Rational::new(10, 1), Rational::new(15, 2)); // (10, 7.5)
     assert_eq!(intersection(&line, &(below_line, above_line)), Some(int));
     assert!(intersection(&line, &(origin, above_line)).is_some());
     assert!(!intersection(&line, &(origin, below_line)).is_some());
@@ -177,7 +184,11 @@ fn test_tile_in_countour() {
     assert!(tile_in_countour(&tile_truly_inside, &contour));
     assert!(tile_in_countour(&first_corner, &contour)); // breaks when contour is closed
     assert!(tile_in_countour(&middle_corner, &contour));
-    assert!(!tile_in_countour(&tile_beyond_contour, &contour))
+    assert!(!tile_in_countour(&tile_beyond_contour, &contour));
+
+    floor.iter().for_each(|tile| {
+        assert!(tile_in_countour(&tile, &contour));
+    })
 }
 
 #[test]
