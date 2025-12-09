@@ -26,13 +26,13 @@ fn solve_1(input: &str) -> u64 {
 
 fn solve_2(input: &str) -> u64 {
     let floor = parse(input);
-    let contour = contour(&floor);
+    let wall_directions = vertical_wall_directions(&floor);
 
     let (a, b) = floor
         .iter()
         .enumerate()
         .flat_map(|(i, tile)| floor[i + 1..].iter().map(move |other| (tile, other)))
-        .filter(|rect| rect_in_contour(rect, &contour))
+        .filter(|rect| rect_in_contour(rect, &wall_directions))
         .max_by(|(a, b), (c, d)| rectangle_size(a, b).cmp(&rectangle_size(c, d)))
         .unwrap();
 
@@ -40,14 +40,14 @@ fn solve_2(input: &str) -> u64 {
     rectangle_size(a, b)
 }
 
-fn rect_in_contour(rect: &Rectangle, contour: &Contour) -> bool {
+fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
     let min_x = rect.0.0.min(rect.1.0);
     let max_x = rect.0.0.max(rect.1.0);
     let min_y = rect.0.1.min(rect.1.1);
     let max_y = rect.0.1.max(rect.1.1);
     let tile_not_in_contour = (min_x..=max_x)
         .flat_map(|x| (min_y..=max_y).map(move |y| (x, y)))
-        .filter(|tile| !tile_in_contour(&tile, contour))
+        .filter(|tile| !tile_in_contour(&tile, wall_directions))
         .next();
 
     if let Some(tile) = tile_not_in_contour {
@@ -78,11 +78,9 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
 }
 
-fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
+fn tile_in_contour(t: &Tile, vertical_walls: &WallDirections) -> bool {
     // if the last vertical wall to the left was going up -> inside; down -> outside
     // (for a clockwise loop)
-
-    let vertical_walls = vertical_wall_directions(contour);
 
     let empty = vec![];
     let last_crossed_wall = vertical_walls
@@ -98,10 +96,10 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
 }
 
 type WallDirections = HashMap<i64, Vec<(i64, bool)>>;
-fn vertical_wall_directions(contour: &Contour) ->  WallDirections{
+fn vertical_wall_directions(floor: &Floor) ->  WallDirections{
     let mut vertical_walls = HashMap::new();
 
-    contour
+    contour(floor)
         .iter()
         .filter(|line| line.0.0 == line.1.0)
         .for_each(|vertical_line| {
@@ -175,42 +173,42 @@ fn test_rectangle_inner_contains() {
 #[test]
 fn test_tile_in_contour() {
     let floor = parse(EXAMPLE);
-    let contour: Contour = contour(&floor);
+    let wall_directions = vertical_wall_directions(&floor);
     let tile_truly_inside = (3, 4);
     let first_corner = floor[0];
     let middle_corner = floor[4];
     let tile_beyond_contour = (12, 12);
-    assert!(tile_in_contour(&tile_truly_inside, &contour));
-    assert!(tile_in_contour(&first_corner, &contour)); // breaks when contour is closed
-    assert!(tile_in_contour(&middle_corner, &contour));
-    assert!(!tile_in_contour(&tile_beyond_contour, &contour));
+    assert!(tile_in_contour(&tile_truly_inside, &wall_directions));
+    assert!(tile_in_contour(&first_corner, &wall_directions)); // breaks when contour is closed
+    assert!(tile_in_contour(&middle_corner, &wall_directions));
+    assert!(!tile_in_contour(&tile_beyond_contour, &wall_directions));
 
     floor.iter().for_each(|tile| {
         println!("{:?}", tile);
-        assert!(tile_in_contour(&tile, &contour));
+        assert!(tile_in_contour(&tile, &wall_directions));
     })
 }
 
 #[test]
 fn test_tile_in_contour_inner() {
     let floor = parse(EXAMPLE);
-    let contour: Contour = contour(&floor);
-    assert!(tile_in_contour(&(8, 3), &contour));
+    let wall_directions = vertical_wall_directions(&floor);
+    assert!(tile_in_contour(&(8, 3), &wall_directions));
 }
 
 #[test]
 fn test_tile_in_contour_11_1() {
     let floor = parse(EXAMPLE);
-    let contour: Contour = contour(&floor);
-    assert!(tile_in_contour(&(11, 1), &contour));
+    let wall_directions = vertical_wall_directions(&floor);
+    assert!(tile_in_contour(&(11, 1), &wall_directions));
 }
 
 #[test]
 fn test_rect_in_contour() {
     let floor = parse(EXAMPLE);
-    let contour: Contour = contour(&floor);
+    let wall_directions = vertical_wall_directions(&floor);
     let example_rectangle = (&(9, 5), &(2, 3)); // example solution to part 2
-    assert!(rect_in_contour(&example_rectangle, &contour));
+    assert!(rect_in_contour(&example_rectangle, &wall_directions));
 }
 
 #[test]
