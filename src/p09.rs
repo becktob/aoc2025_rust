@@ -4,8 +4,7 @@ use std::collections::HashSet;
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -31,21 +30,23 @@ fn solve_2(input: &str) -> u64 {
         .iter()
         .enumerate()
         .flat_map(|(i, tile)| floor[i + 1..].iter().map(move |other| (tile, other)))
-        .filter(|rect| {
-            // Todo: strictly, need to check *all* tiles inside rect
-            // checking the two remaining corners is sufficient for example...
-            let corner_3 = (rect.0.0, rect.1.1);
-            let corner_4 = (rect.1.0, rect.0.1);
-            tile_in_countour(rect.0, &contour)
-                && tile_in_countour(rect.1, &contour)
-                && tile_in_countour(&corner_3, &contour)
-                && tile_in_countour(&corner_4, &contour)
-        })
+        .filter(|rect| rect_in_contour(rect, &contour))
         .max_by(|(a, b), (c, d)| rectangle_size(a, b).cmp(&rectangle_size(c, d)))
         .unwrap();
 
     println!("{:?}", (a, b));
     rectangle_size(a, b)
+}
+
+fn rect_in_contour(rect: &Rectangle, contour: &Contour) -> bool {
+    // Todo: strictly, need to check *all* tiles inside rect
+    // checking the two remaining corners is sufficient for example...
+    let corner_3 = (rect.0.0, rect.1.1);
+    let corner_4 = (rect.1.0, rect.0.1);
+    tile_in_countour(rect.0, &contour)
+        && tile_in_countour(rect.1, &contour)
+        && tile_in_countour(&corner_3, &contour)
+        && tile_in_countour(&corner_4, &contour)
 }
 
 type Tile = (i64, i64);
@@ -229,4 +230,10 @@ fn test_solve_1() {
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(&EXAMPLE), 24);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "42")
+    // 4621384368 too high
 }
