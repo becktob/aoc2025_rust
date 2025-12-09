@@ -240,6 +240,15 @@ fn test_rect_in_contour() {
 }
 
 #[test]
+fn test_rect_in_contour_97_23() {
+    // (2, 6) is not in contour
+    let floor = parse(EXAMPLE);
+    let wall_directions = vertical_wall_directions(&floor);
+    let example_rectangle = (&(9, 7), &(2, 3)); // example solution to part 2
+    assert!(!rect_in_contour(&example_rectangle, &wall_directions));
+}
+
+#[test]
 fn test_solve_1_example() {
     assert_eq!(solve_1(&EXAMPLE), 50);
 }
