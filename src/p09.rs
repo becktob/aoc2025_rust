@@ -41,14 +41,13 @@ fn solve_2(input: &str) -> u64 {
 }
 
 fn rect_in_contour(rect: &Rectangle, contour: &Contour) -> bool {
-    // Todo: strictly, need to check *all* tiles inside rect
-    // checking the two remaining corners is sufficient for example...
-    let corner_3 = (rect.0.0, rect.1.1);
-    let corner_4 = (rect.1.0, rect.0.1);
-    tile_in_contour(rect.0, &contour)
-        && tile_in_contour(rect.1, &contour)
-        && tile_in_contour(&corner_3, &contour)
-        && tile_in_contour(&corner_4, &contour)
+    let min_x = rect.0.0.min(rect.1.0);
+    let max_x = rect.0.0.max(rect.1.0);
+    let min_y = rect.0.1.min(rect.1.1);
+    let max_y = rect.0.1.max(rect.1.1);
+    (min_x..=max_x)
+        .flat_map(|x| (min_y..=max_y).map(move |y| (x, y)))
+        .all(|tile| tile_in_contour(&tile, contour))
 }
 
 type Tile = (i64, i64);
@@ -125,7 +124,10 @@ fn tile_in_contour(t: &Tile, contour: &Contour) -> bool {
         unique_intersections.len() % 2 == 1
     };
 
-    TILE_IN_CONTOUR_CACHE.lock().unwrap().insert(t.clone(), in_contour);
+    TILE_IN_CONTOUR_CACHE
+        .lock()
+        .unwrap()
+        .insert(t.clone(), in_contour);
     in_contour
 }
 
