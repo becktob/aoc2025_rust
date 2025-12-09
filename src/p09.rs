@@ -115,7 +115,7 @@ fn tile_in_contour_(t: &Tile, vertical_walls: &WallDirections) -> bool {
         .get(&t.1)
         .unwrap_or(&empty)
         .iter()
-        .take_while(|&&(wall_y, up)| wall_y <= t.0)
+        .take_while(|&&(wall_x, _)| wall_x <= t.0)
         .last();
 
     let is_on_wall = last_crossed_wall.is_some_and(|last_wall| last_wall.0 == t.0);
