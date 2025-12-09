@@ -11,6 +11,11 @@ pub fn solve(part2: bool) -> String {
 
 type Tile = (i64, i64);
 type Floor = Vec<Tile>;
+
+fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
+    (((b.0 - a.0).abs() + 1) * ((b.1 - a.1) + 1).abs()) as u64
+}
+
 fn parse(input: &str) -> Floor {
     input
         .lines()
@@ -36,4 +41,10 @@ fn test_parse() {
     let floor = parse(&EXAMPLE);
     assert_eq!(floor.len(), 8);
     assert_eq!(floor[7], (7, 3));
+}
+
+#[test]
+fn test_rectangle_size() {
+    assert_eq!(rectangle_size(&(0, 0), &(0, 0)), 1);
+    assert_eq!(rectangle_size(&(2, 5), &(9, 7)), 24);
 }
