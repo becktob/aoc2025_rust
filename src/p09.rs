@@ -21,6 +21,7 @@ fn solve_1(input: &str) -> u64 {
 }
 
 type Tile = (i64, i64);
+type LineSeg<'a> = (&'a Tile, &'a Tile);
 type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
 
@@ -35,6 +36,23 @@ fn rectangle_inner_contains(rectangle: &Rectangle, tile: &Tile) -> bool {
     let ymax = a.1.max(b.1);
     let ymin = a.1.min(b.1);
     xmin < tile.0 && tile.0 < xmax && ymin < tile.1 && tile.1 < ymax
+}
+
+fn segments_intersect(l1: &LineSeg, l2: &LineSeg) -> bool {
+    // Todo: sweep line alogrithm?
+    // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+    let ((x1, y1), (x2, y2)) = l1;
+    let ((x3, y3), (x4, y4)) = l2;
+
+    let t_num = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
+    let u_num = -(x1 - x2) * (y1 - y3) + (y1 - y2) * (x1 - x3);
+    let den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+    // Need t=t_num/den in 0..1:
+    let on_1 = t_num.signum() == den.signum() && t_num.abs() <= den.abs();
+    let on_2 = u_num.signum() == den.signum() && u_num.abs() <= den.abs();
+
+    on_1 && on_2
 }
 
 fn parse(input: &str) -> Floor {
@@ -74,9 +92,33 @@ fn test_rectangle_size() {
 }
 
 #[test]
-fn test_rectangle_inner_contains(){
+fn test_rectangle_inner_contains() {
     let largest_example_rectangle = (&(2, 5), &(11, 1));
-    assert!(rectangle_inner_contains(&largest_example_rectangle, &(7,3)))
+    assert!(rectangle_inner_contains(
+        &largest_example_rectangle,
+        &(7, 3)
+    ))
+}
+
+#[test]
+fn test_segments_intersect(){
+    let line = (&(10, 5), &(10, 10));
+    let origin = &(0, 0);
+    let point_above_line = &(11, 8);
+    let point_below_line = &(9, 7);
+
+    assert!(segments_intersect(&line, &(point_below_line, point_above_line)));
+    assert!(segments_intersect(&line, &(origin, point_above_line)));
+    assert!(!segments_intersect(&line, &(origin, point_below_line)));
+}
+
+#[test]
+fn test_segments_intersect_on_line(){
+    let line = (&(10, 5), &(10, 10));
+    let origin = &(0, 0);
+    let point_on_line = &(10, 8);
+    assert!(segments_intersect(&line, &(origin, point_on_line)));
+
 }
 
 #[test]
