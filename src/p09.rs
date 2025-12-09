@@ -9,6 +9,18 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> u64 {
+    let floor = parse(input);
+
+    floor
+        .iter()
+        .enumerate()
+        .flat_map(|(i, tile)| floor[i + 1..].iter().map(move |other| (tile, other)))
+        .map(|(a, b)| rectangle_size(a, b))
+        .max()
+        .unwrap()
+}
+
 type Tile = (i64, i64);
 type Floor = Vec<Tile>;
 
@@ -47,4 +59,9 @@ fn test_parse() {
 fn test_rectangle_size() {
     assert_eq!(rectangle_size(&(0, 0), &(0, 0)), 1);
     assert_eq!(rectangle_size(&(2, 5), &(9, 7)), 24);
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(&EXAMPLE), 2);
 }
