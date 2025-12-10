@@ -3,13 +3,12 @@ use std::str::FromStr;
 use std::{iter, vec};
 
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
 }
 
@@ -110,6 +109,7 @@ where
         .collect()
 }
 
+#[cfg(test)]
 static EXAMPLE: &str = "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
 [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
@@ -148,4 +148,9 @@ fn test_result_of_presses() {
 #[test]
 fn solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 7);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "477");
 }
