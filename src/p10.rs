@@ -27,27 +27,22 @@ fn parse_machine(line: &str) -> Machine {
         .chars()
         .map(|x| x == '#')
         .collect();
-    let buttons = buttons_raw
-        .split(" ")
-        .map(|parens| {
-            parens
-                .trim_matches(|c| "()".contains(c))
-                .split(',')
-                .map(|x| x.parse().unwrap())
-                .collect()
-        })
-        .collect();
-    let joltage = jolt_raw
-        .trim_matches(|c| "{}".contains(c))
-        .split(',')
-        .map(|x| x.parse().unwrap())
-        .collect();
+    let buttons = buttons_raw.split(" ").map(split_parens).collect();
+    let joltage = split_parens(jolt_raw);
 
     Machine {
         goal,
         buttons,
         joltage,
     }
+}
+
+fn split_parens(parens: &str) -> Vec<u32> {
+    parens
+        .trim_matches(|c| "{}()[]".contains(c))
+        .split(',')
+        .map(|x| x.parse().unwrap())
+        .collect()
 }
 
 static EXAMPLE: &str = "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
