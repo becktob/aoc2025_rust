@@ -13,6 +13,16 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
+fn solve_1(input: &str) -> usize {
+    let machines = parse_machines(input);
+
+    machines
+        .iter()
+        .map(configure_machine)
+        .map(|presses| presses.iter().sum::<usize>())
+        .sum()
+}
+
 struct Machine {
     goal: Vec<bool>,
     buttons: Vec<Vec<usize>>,
@@ -133,4 +143,9 @@ fn test_result_of_presses() {
     assert_eq!(state, machine.goal);
     let solution_state = result_of_presses(&vec![0, 0, 0, 0, 1, 1], machine);
     assert_eq!(solution_state, machine.goal);
+}
+
+#[test]
+fn solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 7);
 }
