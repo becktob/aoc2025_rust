@@ -36,26 +36,27 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
         .flat_map(|n_presses| {
             (0..n_presses).flat_map(|n_pressed| all_sequences(n_buttons, n_pressed))
         })
-        .find(|presses| result_of_presses(presses, machine) == machine.goal)
+        .find(|presses| are_odd(result_of_presses(presses, machine)) == machine.goal)
         .unwrap()
 }
 
-fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<bool> {
+fn are_odd(state: Vec<u32>) -> Vec<bool> {
+    state.iter().map(|n| n%2==1).collect::<Vec<_>>()
+}
+
+fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<u32> {
     presses
         .iter()
         .enumerate()
         .fold(
-            iter::repeat_n(0usize, machine.goal.len()).collect(),
+            iter::repeat_n(0, machine.goal.len()).collect(),
             |mut times_toggled: Vec<_>, (i_button, times_pressed)| {
                 machine.buttons[i_button]
                     .iter()
-                    .for_each(|&light| times_toggled[light] += times_pressed);
+                    .for_each(|&light| times_toggled[light] += *times_pressed as u32);
                 times_toggled
             },
         )
-        .iter()
-        .map(|times_toggled| times_toggled % 2 == 1)
-        .collect()
 }
 
 fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
@@ -140,9 +141,9 @@ fn test_all_sequences() {
 fn test_result_of_presses() {
     let machine = &parse_machines(EXAMPLE)[0];
     let state = result_of_presses(&vec![0, 1, 0, 1, 0, 2], machine);
-    assert_eq!(state, machine.goal);
+    assert_eq!(are_odd(state), machine.goal);
     let solution_state = result_of_presses(&vec![0, 0, 0, 0, 1, 1], machine);
-    assert_eq!(solution_state, machine.goal);
+    assert_eq!(are_odd(solution_state), machine.goal);
 }
 
 #[test]
