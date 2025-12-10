@@ -59,75 +59,6 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
-fn configure_machine_joltage(machine: &Machine) -> ButtonPresses {
-    let mut buttons = machine.buttons.clone();
-    buttons.sort_by_key(|buttons| buttons.len());
-    buttons.reverse();
-
-    let sorted_machine = Machine {
-        goal: machine.goal.clone(),
-        buttons,
-        joltage: machine.joltage.clone(),
-    };
-
-    all_sequences_exact_joltage(sorted_machine)
-        .iter()
-        .cloned()
-        .min_by_key(|presses| presses.iter().sum::<usize>())
-        .unwrap()
-}
-
-fn all_sequences_exact_joltage(machine: Machine) -> Vec<ButtonPresses> {
-    // todo: return Impl Iterator here?
-    // recursion: (how many times can this button be pushed) X (how can the Machine with n-1 buttons do the rest?)
-
-    if machine.joltage.iter().all(|&i| i == 0) {
-        return vec![iter::repeat_n(0, machine.buttons.len()).collect()];
-    }
-
-    if machine.buttons.len() == 0 {
-        return vec![];
-    }
-
-    let this_button = &machine.buttons[0];
-    let max_presses = this_button
-        .iter()
-        .map(|&i| machine.joltage[i])
-        .min()
-        .unwrap();
-
-    let presses = (0..=max_presses)
-        .flat_map(|times_this_button_pressed| {
-            let remaining_joltage = machine
-                .joltage
-                .iter()
-                .enumerate()
-                .map(|(i, &joltage)| {
-                    if this_button.contains(&i) {
-                        joltage - times_this_button_pressed
-                    } else {
-                        joltage
-                    }
-                })
-                .collect();
-
-            let remaining_buttons = machine.buttons[1..].to_owned();
-            let remaining_machine = Machine {
-                goal: machine.goal.clone(),
-                buttons: remaining_buttons,
-                joltage: remaining_joltage,
-            };
-            all_sequences_exact_joltage(remaining_machine)
-                .into_iter()
-                .map(move |mut others| {
-                    others.insert(0, times_this_button_pressed as usize);
-                    others
-                })
-        })
-        .collect::<Vec<_>>();
-    presses
-}
-
 fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
     all_sequences_joltage_lampwise(machine)
         .iter()
@@ -137,7 +68,7 @@ fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
 }
 
 fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
-    if machine.joltage.len() == 0{
+    if machine.joltage.len() == 0 {
         return vec![vec![]];
     }
 
@@ -156,7 +87,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
 
     let joltage_first_lamp = machine.joltage[0];
 
-    if buttons_first_lamp.is_empty() && joltage_first_lamp==0 {
+    if buttons_first_lamp.is_empty() && joltage_first_lamp == 0 {
         // skip this lamp, it's already satisfied
         let machine_remaining = Machine {
             goal: machine.goal.clone(),
@@ -173,7 +104,8 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     all_sequences(buttons_first_lamp.len(), joltage_first_lamp as usize)
         .iter()
         .filter_map(|presses| {
-            let mut joltage_remaining: Vec<i32> = machine.joltage[1..].iter().map(|u| *u as i32).collect();
+            let mut joltage_remaining: Vec<i32> =
+                machine.joltage[1..].iter().map(|u| *u as i32).collect();
             buttons_first_lamp
                 .iter()
                 .zip(presses)
@@ -196,8 +128,12 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
                 all_sequences_joltage_lampwise(&machine_remaining)
                     .into_iter()
                     .map(move |mut others| {
-                        presses.into_iter().chain(others.iter()).cloned().collect::<ButtonPresses>()
-                    })
+                        presses
+                            .into_iter()
+                            .chain(others.iter())
+                            .cloned()
+                            .collect::<ButtonPresses>()
+                    }),
             )
         })
         .flatten()
@@ -295,48 +231,6 @@ fn test_configure_machine() {
 }
 
 #[test]
-fn test_configure_machine_joltage_0() {
-    let machine = &parse_machines(EXAMPLE)[0];
-    let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
-    assert_eq!(button_presses, 10);
-}
-
-#[test]
-fn test_configure_machine_joltage_1() {
-    let machine = &parse_machines(EXAMPLE)[1];
-    let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
-    assert_eq!(button_presses, 12);
-}
-
-#[test]
-fn test_configure_machine_joltage_terminate() {
-    let buttons = vec![vec![0, 1]];
-    let finished_machine = Machine {
-        goal: vec![true, false],
-        buttons,
-        joltage: vec![0, 0],
-    };
-    let button_presses = configure_machine_joltage(&finished_machine)
-        .iter()
-        .sum::<usize>();
-    assert_eq!(button_presses, 0);
-}
-
-#[test]
-fn test_configure_machine_joltage_terminate_no_buttons() {
-    let buttons = vec![];
-    let finished_machine = Machine {
-        goal: vec![true, false],
-        buttons,
-        joltage: vec![0, 0],
-    };
-    let button_presses = configure_machine_joltage(&finished_machine)
-        .iter()
-        .sum::<usize>();
-    assert_eq!(button_presses, 0);
-}
-
-#[test]
 fn test_configure_machine_joltage_lampwise_1() {
     let machine = &parse_machines(EXAMPLE)[1];
     let button_presses = configure_machine_joltage_lampwise(machine)
@@ -367,55 +261,6 @@ fn test_configure_machine_joltage_lampwise_2_presses() {
     };
     let button_presses = configure_machine_joltage_lampwise(&machine);
     assert_eq!(button_presses, vec![1, 1]);
-}
-
-
-#[test]
-fn test_configure_machine_joltage_1_press() {
-    let finished_machine = Machine {
-        goal: vec![true, false],
-        buttons: vec![vec![0, 1]],
-        joltage: vec![1, 1],
-    };
-    let button_presses = configure_machine_joltage(&finished_machine)
-        .iter()
-        .sum::<usize>();
-    assert_eq!(button_presses, 1);
-}
-
-#[test]
-fn test_all_sequences_exact_joltage_0() {
-    let machine = parse_machines(EXAMPLE);
-    let button_presses = all_sequences_exact_joltage(machine[0].clone());
-    let one_solution = vec![1, 3, 0, 3, 1, 2];
-    assert!(button_presses.contains(&one_solution));
-}
-
-#[test]
-fn test_all_sequences_exact_joltage_1() {
-    let machine = parse_machines(EXAMPLE);
-    let button_presses = all_sequences_exact_joltage(machine[1].clone());
-    let one_solution = vec![2, 5, 0, 5, 0];
-    assert!(button_presses.contains(&one_solution));
-}
-
-#[test]
-fn test_all_sequences_exact_joltage_2() {
-    let machine = parse_machines(EXAMPLE);
-    let button_presses = all_sequences_exact_joltage(machine[2].clone());
-    let one_solution = vec![5, 0, 5, 1];
-    assert!(button_presses.contains(&one_solution));
-}
-
-#[test]
-fn test_all_sequences_exact_joltage_2_presses() {
-    let machine = Machine {
-        goal: vec![true, false],
-        buttons: vec![vec![0, 1], vec![1]],
-        joltage: vec![2, 2],
-    };
-    let button_presses = all_sequences_exact_joltage(machine);
-    assert_eq!(button_presses, vec![vec![2, 0]]);
 }
 
 #[test]
