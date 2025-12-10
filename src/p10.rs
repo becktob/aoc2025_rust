@@ -28,10 +28,14 @@ fn solve_2(input: &str) -> usize {
         .iter()
         .map(configure_machine_joltage)
         .enumerate()
-        .map(|(i, presses)| {println!("{:?}/{:?}", i, machines.len()); presses.iter().sum::<usize>()})
+        .map(|(i, presses)| {
+            println!("{:?}/{:?}", i, machines.len());
+            presses.iter().sum::<usize>()
+        })
         .sum()
 }
 
+#[derive(Debug, Clone)]
 struct Machine {
     goal: Vec<bool>,
     buttons: Vec<Vec<usize>>,
@@ -51,33 +55,88 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
 }
 
 fn configure_machine_joltage(machine: &Machine) -> ButtonPresses {
-    let n_buttons = machine.buttons.len();
-    (0..)
-        .flat_map(|n_presses| {
-            (0..n_presses).flat_map(|n_pressed| all_sequences(n_buttons, n_pressed))
-        })
-        .find(|presses| result_of_presses(presses, machine) == machine.joltage)
+    all_sequences_exact_joltage(machine.clone())
+        .iter()
+        .cloned()
+        .filter(|presses| result_of_presses(presses, machine) == machine.joltage)
+        .next()
         .unwrap()
 }
 
+fn all_sequences_exact_joltage(machine: Machine) -> Vec<ButtonPresses> {
+    // todo: return Impl Iterator here?
+    // recursion: (how many times can this button be pushed) X (how can the Machine with n-1 buttons do the rest?)
+    //println!("{:?}", machine);
+
+    if machine.joltage.iter().all(|&i| i == 0) {
+        println!("Done");
+        return vec![iter::repeat_n(0, machine.buttons.len()).collect()];
+    }
+
+    if machine.buttons.len() == 0 {
+        //println!("No Buttons");
+        return vec![];
+    }
+
+    let this_button = &machine.buttons[0];
+    let max_presses = this_button
+        .iter()
+        .map(|&i| machine.joltage[i])
+        .min()
+        .unwrap();
+
+    if max_presses == 0 {
+        //return vec![vec![0]];
+    }
+
+    let presses = (0..=max_presses)
+        .flat_map(|times_this_button_pressed| {
+            let remaining_joltage = machine
+                .joltage
+                .iter()
+                .enumerate()
+                .map(|(i, &joltage)| {
+                    if this_button.contains(&i) {
+                        joltage - times_this_button_pressed
+                    } else {
+                        joltage
+                    }
+                })
+                .collect();
+
+            let remaining_buttons = machine.buttons[1..].to_owned();
+            let remainig_machine = Machine {
+                goal: machine.goal.clone(),
+                buttons: remaining_buttons,
+                joltage: remaining_joltage,
+            };
+            all_sequences_exact_joltage(remainig_machine)
+                .into_iter()
+                .map(move |mut others| {
+                    others.insert(0, times_this_button_pressed as usize);
+                    others
+                })
+        })
+        .collect::<Vec<_>>();
+    //println!("{:?}", presses);
+    presses
+}
+
 fn are_odd(state: Vec<u32>) -> Vec<bool> {
-    state.iter().map(|n| n%2==1).collect::<Vec<_>>()
+    state.iter().map(|n| n % 2 == 1).collect::<Vec<_>>()
 }
 
 fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<u32> {
     let nothing_pressed = iter::repeat_n(0, machine.goal.len()).collect();
-    presses
-        .iter()
-        .enumerate()
-        .fold(
-            nothing_pressed,
-            |mut times_pressed: Vec<_>, (i_button, &times_this_button)| {
-                machine.buttons[i_button]
-                    .iter()
-                    .for_each(|&light| times_pressed[light] += times_this_button as u32);
-                times_pressed
-            },
-        )
+    presses.iter().enumerate().fold(
+        nothing_pressed,
+        |mut times_pressed: Vec<_>, (i_button, &times_this_button)| {
+            machine.buttons[i_button]
+                .iter()
+                .for_each(|&light| times_pressed[light] += times_this_button as u32);
+            times_pressed
+        },
+    )
 }
 
 fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
@@ -158,6 +217,66 @@ fn test_configure_machine_joltage() {
     let machine = &parse_machines(EXAMPLE)[0];
     let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
     assert_eq!(button_presses, 10);
+}
+
+#[test]
+fn test_configure_machine_joltage_terminate() {
+    let buttons = vec![vec![0, 1]];
+    let finished_machine = Machine {
+        goal: vec![true, false],
+        buttons,
+        joltage: vec![0, 0],
+    };
+    let button_presses = configure_machine_joltage(&finished_machine)
+        .iter()
+        .sum::<usize>();
+    assert_eq!(button_presses, 0);
+}
+
+#[test]
+fn test_configure_machine_joltage_terminate_no_buttons() {
+    let buttons = vec![];
+    let finished_machine = Machine {
+        goal: vec![true, false],
+        buttons,
+        joltage: vec![0, 0],
+    };
+    let button_presses = configure_machine_joltage(&finished_machine)
+        .iter()
+        .sum::<usize>();
+    assert_eq!(button_presses, 0);
+}
+
+#[test]
+fn test_configure_machine_joltage_1_press() {
+    let finished_machine = Machine {
+        goal: vec![true, false],
+        buttons: vec![vec![0, 1]],
+        joltage: vec![1, 1],
+    };
+    let button_presses = configure_machine_joltage(&finished_machine)
+        .iter()
+        .sum::<usize>();
+    assert_eq!(button_presses, 1);
+}
+
+#[test]
+fn test_all_sequences_exact_joltage() {
+    let machine = parse_machines(EXAMPLE);
+    let button_presses = all_sequences_exact_joltage(machine[0].clone());
+    let one_solution = vec![1, 3, 0, 3, 1, 2];
+    assert!(button_presses.contains(&one_solution));
+}
+
+#[test]
+fn test_all_sequences_exact_joltage_2_presses() {
+    let machine = Machine {
+        goal: vec![true, false],
+        buttons: vec![vec![0, 1], vec![1]],
+        joltage: vec![2, 2],
+    };
+    let button_presses = all_sequences_exact_joltage(machine);
+    assert_eq!(button_presses, vec![vec![2, 0]]);
 }
 
 #[test]
