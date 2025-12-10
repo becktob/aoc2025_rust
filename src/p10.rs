@@ -127,7 +127,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
             Some(
                 all_sequences_joltage_lampwise(&machine_remaining)
                     .into_iter()
-                    .map(move |mut others| {
+                    .map(move |others| {
                         presses
                             .into_iter()
                             .chain(others.iter())
