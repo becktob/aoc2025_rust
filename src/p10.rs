@@ -44,7 +44,7 @@ fn solve_2(input: &str) -> usize {
 struct Machine {
     goal: Vec<bool>,
     buttons: Vec<Vec<usize>>,
-    joltage: Vec<u32>,
+    joltage: Vec<i32>,
 }
 
 type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
@@ -104,8 +104,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     all_sequences(buttons_first_lamp.len(), joltage_first_lamp as usize)
         .iter()
         .filter_map(|presses| {
-            let mut joltage_remaining: Vec<i32> =
-                machine.joltage[1..].iter().map(|u| *u as i32).collect();
+            let mut joltage_remaining: Vec<i32> = machine.joltage[1..].iter().cloned().collect();
             buttons_first_lamp
                 .iter()
                 .zip(presses)
@@ -122,7 +121,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
             let machine_remaining = Machine {
                 goal: machine.goal.clone(),
                 buttons: buttons_remaining.clone(),
-                joltage: joltage_remaining.iter().map(|i| *i as u32).collect(),
+                joltage: joltage_remaining,
             };
             Some(
                 all_sequences_joltage_lampwise(&machine_remaining)
