@@ -60,7 +60,13 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
 }
 
 fn configure_machine_joltage(machine: &Machine) -> ButtonPresses {
-    all_sequences_exact_joltage(machine.clone())
+    let mut buttons = machine.buttons.clone();
+    buttons.sort_by_key(|buttons| buttons.len());
+    buttons.reverse();
+
+    let sorted_machine = Machine{goal: machine.goal.clone(), buttons, joltage: machine.joltage.clone()};
+
+    all_sequences_exact_joltage(sorted_machine)
         .iter()
         .cloned()
         .min_by_key(|presses| presses.iter().sum::<usize>())
