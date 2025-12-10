@@ -80,13 +80,16 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     let buttons_remaining = machine
         .buttons
         .iter()
-        .cloned()
         .filter(|buttons| !buttons.contains(&0))
         .map(|b| b.into_iter().map(|b| b - 1).collect())
         .collect::<Vec<_>>();
 
     let joltage_first_lamp = machine.joltage[0];
 
+    if buttons_first_lamp.is_empty() && joltage_first_lamp > 0 {
+        // no way to satisfy this lamp without buttons
+        return vec![];
+    }
     if buttons_first_lamp.is_empty() && joltage_first_lamp == 0 {
         // skip this lamp, it's already satisfied
         let machine_remaining = Machine {
@@ -96,10 +99,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
         };
         return all_sequences_joltage_lampwise(&machine_remaining);
     }
-    if buttons_first_lamp.is_empty() && joltage_first_lamp > 0 {
-        // no way to satisfy this lamp without buttons
-        return vec![];
-    }
+
 
     all_sequences(buttons_first_lamp.len(), joltage_first_lamp as usize)
         .iter()
