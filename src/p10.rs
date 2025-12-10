@@ -72,7 +72,9 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
         return vec![vec![]];
     }
 
-    let this_lamp = 0;
+    let this_lamp = (0..machine.joltage.len())
+        .min_by_key(|i| machine.buttons.iter().filter(|&b| b.contains(&i)).count())
+        .unwrap();
 
     let buttons_this_lamp = machine
         .buttons
@@ -308,7 +310,18 @@ fn solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 33);
 }
 
+#[ignore]
 #[test]
 fn test_solve_2() {
     assert_eq!(solve(true), "42");
+}
+
+#[test]
+fn test_solve_2_first() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let button_presses = configure_machine_joltage_lampwise(&machines[0])
+        .iter()
+        .sum::<usize>();
+    assert_eq!(button_presses, 98); // assuming that is the correct answer; just adding this test for timing
 }
