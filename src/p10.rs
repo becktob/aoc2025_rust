@@ -40,6 +40,16 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
+fn configure_machine_joltage(machine: &Machine) -> ButtonPresses {
+    let n_buttons = machine.buttons.len();
+    (0..)
+        .flat_map(|n_presses| {
+            (0..n_presses).flat_map(|n_pressed| all_sequences(n_buttons, n_pressed))
+        })
+        .find(|presses| result_of_presses(presses, machine) == machine.joltage)
+        .unwrap()
+}
+
 fn are_odd(state: Vec<u32>) -> Vec<bool> {
     state.iter().map(|n| n%2==1).collect::<Vec<_>>()
 }
@@ -130,6 +140,13 @@ fn test_configure_machine() {
     let machine = &parse_machines(EXAMPLE)[0];
     let buttons_presses = configure_machine(machine).iter().sum::<usize>();
     assert_eq!(buttons_presses, 2);
+}
+
+#[test]
+fn test_configure_machine_joltage() {
+    let machine = &parse_machines(EXAMPLE)[0];
+    let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
+    assert_eq!(button_presses, 10);
 }
 
 #[test]
