@@ -65,16 +65,17 @@ fn are_odd(state: Vec<u32>) -> Vec<bool> {
 }
 
 fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<u32> {
+    let nothing_pressed = iter::repeat_n(0, machine.goal.len()).collect();
     presses
         .iter()
         .enumerate()
         .fold(
-            iter::repeat_n(0, machine.goal.len()).collect(),
-            |mut times_toggled: Vec<_>, (i_button, times_pressed)| {
+            nothing_pressed,
+            |mut times_pressed: Vec<_>, (i_button, &times_this_button)| {
                 machine.buttons[i_button]
                     .iter()
-                    .for_each(|&light| times_toggled[light] += *times_pressed as u32);
-                times_toggled
+                    .for_each(|&light| times_pressed[light] += times_this_button as u32);
+                times_pressed
             },
         )
 }
