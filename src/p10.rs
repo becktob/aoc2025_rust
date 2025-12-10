@@ -72,26 +72,44 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
         return vec![vec![]];
     }
 
-    let buttons_first_lamp = machine
+    let this_lamp = 0;
+
+    let buttons_this_lamp = machine
         .buttons
         .iter()
-        .filter(|&buttons| buttons.contains(&0))
+        .filter(|buttons| buttons.contains(&this_lamp))
+        .map(|b| {
+            b.into_iter()
+                .filter(|&&b| b != this_lamp)
+                .map(|&b| if b < this_lamp { b } else { b - 1 })
+                .collect::<Vec<_>>()
+        })
         .collect::<Vec<_>>();
     let buttons_remaining = machine
         .buttons
         .iter()
-        .filter(|buttons| !buttons.contains(&0))
-        .map(|b| b.into_iter().map(|b| b - 1).collect())
+        .filter(|buttons| !buttons.contains(&this_lamp))
+        .map(|b| {
+            b.into_iter()
+                .map(|&b| if b < this_lamp { b } else { b - 1 })
+                .collect()
+        })
         .collect::<Vec<_>>();
 
-    let joltage_first_lamp = machine.joltage[0];
-    let remaining_joltage: Vec<i32> = machine.joltage[1..].iter().cloned().collect();
+    let joltage_this_lamp = machine.joltage[this_lamp];
+    let remaining_joltage: Vec<i32> = machine
+        .joltage
+        .iter()
+        .enumerate()
+        .filter_map(|(i, jolt)| (i != this_lamp).then_some(jolt))
+        .cloned()
+        .collect();
 
-    if buttons_first_lamp.is_empty() && joltage_first_lamp > 0 {
+    if buttons_this_lamp.is_empty() && joltage_this_lamp > 0 {
         // no way to satisfy this lamp without buttons
         return vec![];
     }
-    if buttons_first_lamp.is_empty() && joltage_first_lamp == 0 {
+    if buttons_this_lamp.is_empty() && joltage_this_lamp == 0 {
         // skip this lamp, it's already satisfied
         let machine_remaining = Machine {
             goal: machine.goal.clone(),
@@ -101,18 +119,17 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
         return all_sequences_joltage_lampwise(&machine_remaining);
     }
 
-    all_sequences(buttons_first_lamp.len(), joltage_first_lamp as usize)
+    all_sequences(buttons_this_lamp.len(), joltage_this_lamp as usize)
         .iter()
-        .filter_map(|mut presses| {
+        .filter_map(|presses| {
             let mut joltage_remaining: Vec<i32> = remaining_joltage.iter().cloned().collect();
-            buttons_first_lamp
+            buttons_this_lamp
                 .iter()
                 .zip(presses)
                 .for_each(|(button, press)| {
                     button
                         .iter()
-                        .filter(|&i| *i != 0)
-                        .for_each(|&i| joltage_remaining[i - 1] -= *press as i32)
+                        .for_each(|&i| joltage_remaining[i] -= *press as i32)
                 });
             if joltage_remaining.iter().any(|&i| i < 0) {
                 return None;
