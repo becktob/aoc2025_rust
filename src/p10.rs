@@ -21,6 +21,16 @@ struct Machine {
 
 type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
+fn configure_machine(machine: &Machine) -> ButtonPresses {
+    let n_buttons = machine.buttons.len();
+    (0..)
+        .flat_map(|n_presses| {
+            (0..n_presses).flat_map(|n_pressed| all_sequences(n_buttons, n_pressed))
+        })
+        .find(|presses| result_of_presses(presses, machine) == machine.goal)
+        .unwrap()
+}
+
 fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<bool> {
     presses
         .iter()
@@ -105,6 +115,13 @@ fn test_parse_machines() {
 }
 
 #[test]
+fn test_configure_machine() {
+    let machine = &parse_machines(EXAMPLE)[0];
+    let buttons_presses = configure_machine(machine).iter().sum::<usize>();
+    assert_eq!(buttons_presses, 2);
+}
+
+#[test]
 fn test_all_sequences() {
     assert_eq!(all_sequences(2, 2), vec![[2, 0], [1, 1], [0, 2]]);
 }
@@ -114,4 +131,6 @@ fn test_result_of_presses() {
     let machine = &parse_machines(EXAMPLE)[0];
     let state = result_of_presses(&vec![0, 1, 0, 1, 0, 2], machine);
     assert_eq!(state, machine.goal);
+    let solution_state = result_of_presses(&vec![0, 0, 0, 0, 1, 1], machine);
+    assert_eq!(solution_state, machine.goal);
 }
