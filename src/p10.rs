@@ -1,3 +1,6 @@
+use std::fmt::Debug;
+use std::str::FromStr;
+
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
@@ -37,7 +40,10 @@ fn parse_machine(line: &str) -> Machine {
     }
 }
 
-fn split_parens(parens: &str) -> Vec<u32> {
+fn split_parens<T: FromStr>(parens: &str) -> Vec<T>
+where
+    <T as FromStr>::Err: Debug,
+{
     parens
         .trim_matches(|c| "{}()[]".contains(c))
         .split(',')
