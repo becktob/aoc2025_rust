@@ -29,7 +29,7 @@ fn solve_2(input: &str) -> usize {
         .map(configure_machine_joltage)
         .enumerate()
         .map(|(i, presses)| {
-            println!("{:?}/{:?}", i, machines.len());
+            println!("{:?}/{:?} - {:?}", i, machines.len(), presses.iter().sum::<usize>());
             presses.iter().sum::<usize>()
         })
         .sum()
@@ -59,7 +59,7 @@ fn configure_machine_joltage(machine: &Machine) -> ButtonPresses {
         .iter()
         .cloned()
         .filter(|presses| result_of_presses(presses, machine) == machine.joltage)
-        .next()
+        .min_by_key(|presses| presses.iter().sum::<usize>())
         .unwrap()
 }
 
@@ -69,7 +69,7 @@ fn all_sequences_exact_joltage(machine: Machine) -> Vec<ButtonPresses> {
     //println!("{:?}", machine);
 
     if machine.joltage.iter().all(|&i| i == 0) {
-        println!("Done");
+        //println!("Done");
         return vec![iter::repeat_n(0, machine.buttons.len()).collect()];
     }
 
@@ -213,10 +213,17 @@ fn test_configure_machine() {
 }
 
 #[test]
-fn test_configure_machine_joltage() {
+fn test_configure_machine_joltage_0() {
     let machine = &parse_machines(EXAMPLE)[0];
     let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
     assert_eq!(button_presses, 10);
+}
+
+#[test]
+fn test_configure_machine_joltage_1() {
+    let machine = &parse_machines(EXAMPLE)[1];
+    let button_presses = configure_machine_joltage(machine).iter().sum::<usize>();
+    assert_eq!(button_presses, 12);
 }
 
 #[test]
@@ -261,10 +268,26 @@ fn test_configure_machine_joltage_1_press() {
 }
 
 #[test]
-fn test_all_sequences_exact_joltage() {
+fn test_all_sequences_exact_joltage_0() {
     let machine = parse_machines(EXAMPLE);
     let button_presses = all_sequences_exact_joltage(machine[0].clone());
     let one_solution = vec![1, 3, 0, 3, 1, 2];
+    assert!(button_presses.contains(&one_solution));
+}
+
+#[test]
+fn test_all_sequences_exact_joltage_1() {
+    let machine = parse_machines(EXAMPLE);
+    let button_presses = all_sequences_exact_joltage(machine[1].clone());
+    let one_solution = vec![2, 5, 0, 5, 0];
+    assert!(button_presses.contains(&one_solution));
+}
+
+#[test]
+fn test_all_sequences_exact_joltage_2() {
+    let machine = parse_machines(EXAMPLE);
+    let button_presses = all_sequences_exact_joltage(machine[2].clone());
+    let one_solution = vec![5, 0, 5, 1];
     assert!(button_presses.contains(&one_solution));
 }
 
