@@ -5,8 +5,7 @@ use std::{iter, vec};
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -19,6 +18,17 @@ fn solve_1(input: &str) -> usize {
         .iter()
         .map(configure_machine)
         .map(|presses| presses.iter().sum::<usize>())
+        .sum()
+}
+
+fn solve_2(input: &str) -> usize {
+    let machines = parse_machines(input);
+
+    machines
+        .iter()
+        .map(configure_machine_joltage)
+        .enumerate()
+        .map(|(i, presses)| {println!("{:?}/{:?}", i, machines.len()); presses.iter().sum::<usize>()})
         .sum()
 }
 
@@ -171,4 +181,14 @@ fn solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "477");
+}
+
+#[test]
+fn solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 33);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "42");
 }
