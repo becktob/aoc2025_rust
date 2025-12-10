@@ -317,11 +317,11 @@ fn test_solve_2() {
 }
 
 #[test]
-fn test_solve_2_first() {
+fn test_solve_2_time() {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     let machines = parse_machines(&input);
-    let button_presses = configure_machine_joltage_lampwise(&machines[0])
+    let button_presses = configure_machine_joltage_lampwise(&machines[23])
         .iter()
         .sum::<usize>();
-    assert_eq!(button_presses, 98); // assuming that is the correct answer; just adding this test for timing
+    assert_eq!(button_presses, 66); // assuming that is the correct answer; just adding this test for timing
 }
