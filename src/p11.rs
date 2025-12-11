@@ -13,15 +13,15 @@ pub fn solve(part2: bool) -> String {
 fn solve_1(input: &str) -> usize {
     let devices = parse(input);
     // paths_to_out_grow(&devices).get("you").unwrap().len() // too slow.
-    paths_to_out(&devices, "you").len()
+    paths_to_out(&devices, "you")
 }
 
 fn solve_2(input: &str) -> usize {
     let devices = parse(input);
 
-    paths(&devices, "svr", "fft").len()
-        * paths(&devices, "fft", "dac").len()
-        * paths(&devices, "dac", "out").len()
+    paths(&devices, "svr", "fft")
+        * paths(&devices, "fft", "dac")
+        * paths(&devices, "dac", "out")
 }
 
 struct Node {
@@ -105,12 +105,12 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
     paths_to_out
 }
 
-fn paths_to_out(devices: &Devices, label: &str) -> Vec<Vec<String>> {
+fn paths_to_out(devices: &Devices, label: &str) -> usize {
     paths(devices, label, "out")
 }
-fn paths(devices: &Devices, from: &str, target: &str) -> Vec<Vec<String>> {
+fn paths(devices: &Devices, from: &str, target: &str) -> usize {
     if from == target {
-        return [[target.to_string()].to_vec()].to_vec();
+        return 1;
     }
 
     devices
@@ -118,12 +118,8 @@ fn paths(devices: &Devices, from: &str, target: &str) -> Vec<Vec<String>> {
         .unwrap()
         .to
         .iter()
-        .flat_map(|to| paths(devices, devices.get(to).unwrap().label.as_str(), target))
-        .map(move |mut remaining_path| {
-            remaining_path.insert(0, from.to_string());
-            remaining_path.clone()
-        })
-        .collect()
+        .map(|to| paths(devices, devices.get(to).unwrap().label.as_str(), target))
+        .sum()
 }
 
 #[cfg(test)]
@@ -207,10 +203,7 @@ fn test_paths_to_out_grow_bbb() {
 #[test]
 fn test_paths_to_out() {
     let devices = parse(&EXAMPLE);
-    let paths_to_out = paths_to_out(&devices, "you");
-    assert_eq!(paths_to_out.len(), 5);
-    let known_path = ["you", "ccc", "fff", "out"].map(str::to_string).to_vec();
-    assert!(paths_to_out.contains(&known_path));
+    assert_eq!(paths_to_out(&devices, "you"), 5);
 }
 
 #[test]
