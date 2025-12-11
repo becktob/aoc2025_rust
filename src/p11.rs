@@ -13,7 +13,7 @@ pub fn solve(part2: bool) -> String {
 fn solve_1(input: &str) -> usize {
     let devices = parse(input);
     // paths_to_out_grow(&devices).get("you").unwrap().len() // too slow.
-    paths_to_out(&devices, "you")
+    paths_to_out(&devices, "you").len()
 }
 
 struct Node {
@@ -97,9 +97,9 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
     paths_to_out
 }
 
-fn paths_to_out(devices: &Devices, label: &str) -> usize {
+fn paths_to_out(devices: &Devices, label: &str) -> Vec<Vec<String>> {
     if label == "out" {
-        return 1;
+        return [["out".to_string()].to_vec()].to_vec();
     }
 
     devices
@@ -107,8 +107,12 @@ fn paths_to_out(devices: &Devices, label: &str) -> usize {
         .unwrap()
         .to
         .iter()
-        .map(|to| paths_to_out(devices, devices.get(to).unwrap().label.as_str()))
-        .sum()
+        .flat_map(|to| paths_to_out(devices, devices.get(to).unwrap().label.as_str()))
+        .map(move |mut remaining_path| {
+            remaining_path.insert(0, label.to_string());
+            remaining_path.clone()
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -176,7 +180,10 @@ fn test_paths_to_out_grow_bbb() {
 #[test]
 fn test_paths_to_out() {
     let devices = parse(&EXAMPLE);
-    assert_eq!(paths_to_out(&devices, "you"), 5);
+    let paths_to_out = paths_to_out(&devices, "you");
+    assert_eq!(paths_to_out.len(), 5);
+    let known_path = ["you", "ccc", "fff", "out"].map(str::to_string).to_vec();
+    assert!(paths_to_out.contains(&known_path));
 }
 
 #[test]
