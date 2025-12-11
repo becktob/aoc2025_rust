@@ -50,6 +50,21 @@ struct Machine {
 type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
 fn configure_machine(machine: &Machine) -> ButtonPresses {
+    /*
+    let mut indices = (0..machine.joltage.len()).collect::<Vec<_>>();
+    indices.sort_by_key(|&i| machine.buttons.iter().filter(|&b| b.contains(&i)).count());
+
+    let joltage: Vec<i32> = indices.iter().map(|&i| machine.joltage[i]).collect();
+    let buttons: Vec<Vec<usize>> = machine
+        .buttons
+        .iter()
+        .map(|&b| b.iter().map(|&i| indices[i]))
+        .collect();
+
+    // todo: sort entire machine once, at beginning.
+
+
+     */
     let n_buttons = machine.buttons.len();
     (0..)
         .flat_map(|n_presses| {
