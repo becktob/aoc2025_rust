@@ -13,7 +13,7 @@ pub fn solve(part2: bool) -> String {
 fn solve_1(input: &str) -> usize {
     let devices = parse(input);
     // paths_to_out_grow(&devices).get("you").unwrap().len() // too slow.
-    0
+    paths_to_out(&devices, "you")
 }
 
 struct Node {
@@ -58,7 +58,10 @@ fn parse(input: &'_ str) -> Devices {
 
 fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>> {
     let mut paths_to_out = HashMap::new();
-    paths_to_out.insert("out".to_string(), HashSet::from_iter([vec!["out".to_string()]]));
+    paths_to_out.insert(
+        "out".to_string(),
+        HashSet::from_iter([vec!["out".to_string()]]),
+    );
 
     let mut nodes_todo = HashSet::new();
     nodes_todo.insert("out".to_string());
@@ -93,6 +96,20 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
     paths_to_out
 }
 
+fn paths_to_out(devices: &Devices, label: &str) -> usize {
+    if label == "out" {
+        return 1;
+    }
+
+    devices
+        .get(label)
+        .unwrap()
+        .to
+        .iter()
+        .map(|to| paths_to_out(devices, devices.get(to).unwrap().label.as_str()))
+        .sum()
+}
+
 static EXAMPLE: &str = "aaa: you hhh
 you: bbb ccc
 bbb: ddd eee
@@ -125,10 +142,6 @@ fn test_parse() {
 fn test_paths_to_out_grow_you() {
     let devices = parse(&EXAMPLE);
     let paths = paths_to_out_grow(&devices);
-    paths
-        .iter()
-        .for_each(|(label, path)| println!("{:?}: {:?}", label, path));
-
     let paths_to_you = paths.get("you").unwrap();
     assert_eq!(paths_to_you.len(), 5);
     let known_path = ["you", "ccc", "fff", "out"].map(str::to_string).to_vec();
@@ -158,9 +171,18 @@ fn test_paths_to_out_grow_bbb() {
     assert_eq!(*paths_to, HashSet::from_iter(known_paths));
 }
 
-
-#[ignore]
 #[test]
-fn test_solve_1(){
-    assert_eq!(solve(false), "10");
+fn test_paths_to_out() {
+    let devices = parse(&EXAMPLE);
+    assert_eq!(paths_to_out(&devices, "you"), 5);
+}
+
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 5);
+}
+
+#[test]
+fn test_solve_1() {
+    assert_eq!(solve(false), "423");
 }
