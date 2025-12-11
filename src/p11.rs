@@ -1,10 +1,11 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::{BuildHasherDefault, DefaultHasher};
+use std::sync::Mutex;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_11.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -19,11 +20,10 @@ fn solve_1(input: &str) -> usize {
 fn solve_2(input: &str) -> usize {
     let devices = parse(input);
 
-    paths(&devices, "svr", "fft")
-        * paths(&devices, "fft", "dac")
-        * paths(&devices, "dac", "out")
+    paths(&devices, "svr", "fft") * paths(&devices, "fft", "dac") * paths(&devices, "dac", "out")
 }
 
+#[derive(Eq, PartialEq)]
 struct Node {
     label: String,
     to: HashSet<String>,
@@ -41,6 +41,8 @@ fn empty_node(label: &str) -> Node {
 type Devices = HashMap<String, Node>;
 
 fn parse(input: &'_ str) -> Devices {
+    TILE_IN_CONTOUR_CACHE.lock().unwrap().clear();
+
     let mut devices_vec: Vec<_> = input
         .lines()
         .map(|l| l.split_once(':').unwrap())
@@ -108,18 +110,34 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
 fn paths_to_out(devices: &Devices, label: &str) -> usize {
     paths(devices, label, "out")
 }
+
+static TILE_IN_CONTOUR_CACHE: Mutex<
+    HashMap<(String, String), usize, BuildHasherDefault<DefaultHasher>>,
+> = Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
+static mut CACHE_HITS: usize = 0;
 fn paths(devices: &Devices, from: &str, target: &str) -> usize {
     if from == target {
         return 1;
     }
 
-    devices
+    let cache_key = (from.to_string(), target.to_string());
+    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(&cache_key) {
+        unsafe {
+            CACHE_HITS += 1;
+        }
+        return *cache_val;
+    }
+
+    let paths = devices
         .get(from)
         .unwrap()
         .to
         .iter()
         .map(|to| paths(devices, devices.get(to).unwrap().label.as_str(), target))
-        .sum()
+        .sum();
+
+    TILE_IN_CONTOUR_CACHE.lock().unwrap().insert(cache_key, paths);
+    paths
 }
 
 #[cfg(test)]
@@ -219,4 +237,9 @@ fn test_solve_1() {
 #[test]
 fn test_solve_2_example() {
     assert_eq!(solve_2(EXAMPLE_2), 2);
+}
+
+#[test]
+fn test_solve_2() {
+    assert_eq!(solve(true), "333657640517376");
 }
