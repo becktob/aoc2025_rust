@@ -4,7 +4,8 @@ use std::iter;
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_09.txt").expect("could not read file");
     if part2 {
-        solve_2(&input).to_string()
+        "SLOW".to_string()
+        //solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
