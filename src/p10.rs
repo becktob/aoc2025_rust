@@ -101,7 +101,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     if buttons_first_lamp.is_empty() && joltage_first_lamp == 0 {
         // skip this lamp, it's already satisfied
         let machine_remaining = Machine {
-            goal: machine.goal.clone(),
+            goal: vec![],
             buttons: buttons_remaining.clone(),
             joltage: remaining_joltage,
         };
@@ -126,7 +126,7 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
             }
 
             let machine_remaining = Machine {
-                goal: machine.goal.clone(),
+                goal: vec![],
                 buttons: buttons_remaining.clone(),
                 joltage: joltage_remaining,
             };
