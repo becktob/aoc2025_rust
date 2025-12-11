@@ -11,13 +11,13 @@ pub fn solve(part2: bool) -> String {
     }
 }
 
-struct Node<'a> {
+struct Node {
     label: String,
-    to: HashSet<&'a Node<'a>>,
-    from: HashSet<&'a Node<'a>>,
+    to: HashSet<String>,
+    from: HashSet<String>,
 }
 
-fn empty_node(label: &str) -> Node<'_> {
+fn empty_node(label: &str) -> Node {
     Node {
         label: label.to_string(),
         from: HashSet::new(),
@@ -25,7 +25,7 @@ fn empty_node(label: &str) -> Node<'_> {
     }
 }
 
-type Devices<'a> = HashMap<String, Node<'a>>;
+type Devices = HashMap<String, Node>;
 
 fn parse(input: &'_ str) -> Devices {
     let mut devices_vec: Vec<_> = input
@@ -34,7 +34,19 @@ fn parse(input: &'_ str) -> Devices {
         .map(|(a, _)| (a.to_string(), empty_node(a)))
         .collect();
     devices_vec.push(("out".to_string(), empty_node("out")));
-    let devices = Devices::from_iter(devices_vec);
+    let mut devices = Devices::from_iter(devices_vec);
+
+    input
+        .lines()
+        .map(|l| l.split_once(':').unwrap())
+        .for_each(|(a, b)| {
+            b.trim().split(" ").for_each(|b| {
+                let from_name = devices.get(a).unwrap().label.to_string();
+                let to_name = devices.get(b).unwrap().label.to_string();
+                devices.get_mut(a).unwrap().to.insert(to_name);
+                devices.get_mut(b).unwrap().from.insert(from_name);
+            });
+        });
 
     devices
 }
@@ -57,5 +69,12 @@ fn test_parse() {
     assert_eq!(devices.len(), 10 + 1);
     assert!(devices.contains_key("you"));
     assert!(devices.contains_key("out"));
-    //assert_eq!(devices["ccc"].to, HashSet::new());
+    assert_eq!(
+        devices["ccc"].to,
+        HashSet::from(["fff", "eee", "ddd"].map(str::to_string))
+    );
+    assert_eq!(
+        devices["out"].from,
+        HashSet::from(["eee", "fff", "ggg", "iii"].map(str::to_string))
+    );
 }
