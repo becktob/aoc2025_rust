@@ -51,6 +51,43 @@ fn parse(input: &'_ str) -> Devices {
     devices
 }
 
+fn paths_to_out(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>> {
+    let mut paths_to_out = HashMap::new();
+    paths_to_out.insert("out".to_string(), HashSet::from_iter([vec!["out".to_string()]]));
+
+    let mut nodes_todo = HashSet::new();
+    nodes_todo.insert("out".to_string());
+
+    while !nodes_todo.is_empty() {
+        let node_name = nodes_todo.iter().cloned().next().unwrap();
+        nodes_todo.remove(&node_name);
+
+        devices
+            .get(&node_name)
+            .unwrap()
+            .from
+            .iter()
+            .for_each(|node_leading_here| {
+                let paths_from_here_to_out = paths_to_out.get(&node_name).unwrap().clone();
+                paths_from_here_to_out
+                    .iter()
+                    .for_each(|path_from_here: &Vec<String>| {
+                        let mut path_from_node = path_from_here.clone();
+                        path_from_node.insert(0, node_leading_here.to_string());
+                        paths_to_out
+                            .entry(node_leading_here.to_string())
+                            .or_insert(HashSet::new())
+                            .insert(path_from_node);
+
+                        // process that node (again?)
+                        nodes_todo.insert(node_leading_here.to_string());
+                    })
+            })
+    }
+
+    paths_to_out
+}
+
 static EXAMPLE: &str = "aaa: you hhh
 you: bbb ccc
 bbb: ddd eee
@@ -77,4 +114,41 @@ fn test_parse() {
         devices["out"].from,
         HashSet::from(["eee", "fff", "ggg", "iii"].map(str::to_string))
     );
+}
+
+#[test]
+fn test_paths_to_out_you() {
+    let devices = parse(&EXAMPLE);
+    let paths = paths_to_out(&devices);
+    paths
+        .iter()
+        .for_each(|(label, path)| println!("{:?}: {:?}", label, path));
+
+    let paths_to_you = paths.get("you").unwrap();
+    assert_eq!(paths_to_you.len(), 5);
+    let known_path = ["you", "ccc", "fff", "out"].map(str::to_string).to_vec();
+    assert!(paths_to_you.contains(&known_path));
+}
+
+#[test]
+fn test_paths_to_out_eee() {
+    let devices = parse(&EXAMPLE);
+    let paths = paths_to_out(&devices);
+    let paths_to = paths.get("eee").unwrap();
+    assert_eq!(paths_to.len(), 1);
+    let only_path = ["eee", "out"].map(str::to_string).to_vec();
+    assert_eq!(*paths_to, HashSet::from_iter([only_path]));
+}
+
+#[test]
+fn test_paths_to_out_bbb() {
+    let devices = parse(&EXAMPLE);
+    let paths = paths_to_out(&devices);
+    let paths_to = paths.get("bbb").unwrap();
+    assert_eq!(paths_to.len(), 2);
+    let known_paths = [
+        ["bbb", "eee", "out"].map(str::to_string).to_vec(),
+        ["bbb", "ddd", "ggg", "out"].map(str::to_string).to_vec(),
+    ];
+    assert_eq!(*paths_to, HashSet::from_iter(known_paths));
 }
