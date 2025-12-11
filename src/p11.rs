@@ -18,14 +18,10 @@ fn solve_1(input: &str) -> usize {
 
 fn solve_2(input: &str) -> usize {
     let devices = parse(input);
-    let svr_fft_dac_out = paths(&devices, "svr", "fft").len()
-        * paths(&devices, "fft", "dac").len()
-        * paths(&devices, "dac", "out").len();
-    let svr_dac_fft_out = paths(&devices, "svr", "dac").len()
-        * paths(&devices, "dac", "fft").len()
-        * paths(&devices, "fft", "out").len();
 
-    svr_fft_dac_out + svr_dac_fft_out
+    paths(&devices, "svr", "fft").len()
+        * paths(&devices, "fft", "dac").len()
+        * paths(&devices, "dac", "out").len()
 }
 
 struct Node {
