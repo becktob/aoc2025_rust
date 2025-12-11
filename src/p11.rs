@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::hash::{BuildHasherDefault, DefaultHasher};
+use std::hash::{BuildHasherDefault, DefaultHasher, Hash, Hasher};
 use std::sync::Mutex;
 
 pub fn solve(part2: bool) -> String {
@@ -38,18 +38,19 @@ fn empty_node(label: &str) -> Node {
     }
 }
 
-type Devices = HashMap<String, Node>;
+struct Devices {
+    devices: HashMap<String, Node>,
+    input_hash: u64,
+}
 
 fn parse(input: &'_ str) -> Devices {
-    TILE_IN_CONTOUR_CACHE.lock().unwrap().clear();
-
     let mut devices_vec: Vec<_> = input
         .lines()
         .map(|l| l.split_once(':').unwrap())
         .map(|(a, _)| (a.to_string(), empty_node(a)))
         .collect();
     devices_vec.push(("out".to_string(), empty_node("out")));
-    let mut devices = Devices::from_iter(devices_vec);
+    let mut devices = HashMap::from_iter(devices_vec);
 
     input
         .lines()
@@ -63,7 +64,14 @@ fn parse(input: &'_ str) -> Devices {
             });
         });
 
-    devices
+    let mut s = DefaultHasher::new();
+    input.hash(&mut s);
+    let input_hash = s.finish();
+
+    Devices {
+        devices,
+        input_hash,
+    }
 }
 
 #[cfg(test)]
@@ -82,6 +90,7 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
         nodes_todo.remove(&node_name);
 
         devices
+            .devices
             .get(&node_name)
             .unwrap()
             .from
@@ -111,32 +120,35 @@ fn paths_to_out(devices: &Devices, label: &str) -> usize {
     paths(devices, label, "out")
 }
 
-static TILE_IN_CONTOUR_CACHE: Mutex<
-    HashMap<(String, String), usize, BuildHasherDefault<DefaultHasher>>,
+static PATHS_CACHE: Mutex<
+    HashMap<(u64, String, String), usize, BuildHasherDefault<DefaultHasher>>,
 > = Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
-static mut CACHE_HITS: usize = 0;
 fn paths(devices: &Devices, from: &str, target: &str) -> usize {
     if from == target {
         return 1;
     }
 
-    let cache_key = (from.to_string(), target.to_string());
-    if let Some(cache_val) = TILE_IN_CONTOUR_CACHE.lock().unwrap().get(&cache_key) {
-        unsafe {
-            CACHE_HITS += 1;
-        }
+    let cache_key = (devices.input_hash, from.to_string(), target.to_string());
+    if let Some(cache_val) = PATHS_CACHE.lock().unwrap().get(&cache_key) {
         return *cache_val;
     }
 
     let paths = devices
+        .devices
         .get(from)
         .unwrap()
         .to
         .iter()
-        .map(|to| paths(devices, devices.get(to).unwrap().label.as_str(), target))
+        .map(|to| {
+            paths(
+                devices,
+                devices.devices.get(to).unwrap().label.as_str(),
+                target,
+            )
+        })
         .sum();
 
-    TILE_IN_CONTOUR_CACHE.lock().unwrap().insert(cache_key, paths);
+    PATHS_CACHE.lock().unwrap().insert(cache_key, paths);
     paths
 }
 
@@ -172,15 +184,15 @@ hhh: out
 #[test]
 fn test_parse() {
     let devices = parse(&EXAMPLE);
-    assert_eq!(devices.len(), 10 + 1);
-    assert!(devices.contains_key("you"));
-    assert!(devices.contains_key("out"));
+    assert_eq!(devices.devices.len(), 10 + 1);
+    assert!(devices.devices.contains_key("you"));
+    assert!(devices.devices.contains_key("out"));
     assert_eq!(
-        devices["ccc"].to,
+        devices.devices["ccc"].to,
         HashSet::from(["fff", "eee", "ddd"].map(str::to_string))
     );
     assert_eq!(
-        devices["out"].from,
+        devices.devices["out"].from,
         HashSet::from(["eee", "fff", "ggg", "iii"].map(str::to_string))
     );
 }
