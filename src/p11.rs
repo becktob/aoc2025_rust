@@ -1,14 +1,19 @@
 use std::collections::{HashMap, HashSet};
 
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_11.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
+}
+
+fn solve_1(input: &str) -> usize {
+    let devices = parse(input);
+    // paths_to_out_grow(&devices).get("you").unwrap().len() // too slow.
+    0
 }
 
 struct Node {
@@ -51,7 +56,7 @@ fn parse(input: &'_ str) -> Devices {
     devices
 }
 
-fn paths_to_out(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>> {
+fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>> {
     let mut paths_to_out = HashMap::new();
     paths_to_out.insert("out".to_string(), HashSet::from_iter([vec!["out".to_string()]]));
 
@@ -117,9 +122,9 @@ fn test_parse() {
 }
 
 #[test]
-fn test_paths_to_out_you() {
+fn test_paths_to_out_grow_you() {
     let devices = parse(&EXAMPLE);
-    let paths = paths_to_out(&devices);
+    let paths = paths_to_out_grow(&devices);
     paths
         .iter()
         .for_each(|(label, path)| println!("{:?}: {:?}", label, path));
@@ -131,9 +136,9 @@ fn test_paths_to_out_you() {
 }
 
 #[test]
-fn test_paths_to_out_eee() {
+fn test_paths_to_out_grow_eee() {
     let devices = parse(&EXAMPLE);
-    let paths = paths_to_out(&devices);
+    let paths = paths_to_out_grow(&devices);
     let paths_to = paths.get("eee").unwrap();
     assert_eq!(paths_to.len(), 1);
     let only_path = ["eee", "out"].map(str::to_string).to_vec();
@@ -141,9 +146,9 @@ fn test_paths_to_out_eee() {
 }
 
 #[test]
-fn test_paths_to_out_bbb() {
+fn test_paths_to_out_grow_bbb() {
     let devices = parse(&EXAMPLE);
-    let paths = paths_to_out(&devices);
+    let paths = paths_to_out_grow(&devices);
     let paths_to = paths.get("bbb").unwrap();
     assert_eq!(paths_to.len(), 2);
     let known_paths = [
@@ -151,4 +156,11 @@ fn test_paths_to_out_bbb() {
         ["bbb", "ddd", "ggg", "out"].map(str::to_string).to_vec(),
     ];
     assert_eq!(*paths_to, HashSet::from_iter(known_paths));
+}
+
+
+#[ignore]
+#[test]
+fn test_solve_1(){
+    assert_eq!(solve(false), "10");
 }
