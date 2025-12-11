@@ -18,10 +18,14 @@ fn solve_1(input: &str) -> usize {
 
 fn solve_2(input: &str) -> usize {
     let devices = parse(input);
-    paths_to_out(&devices, "svr")
-        .iter()
-        .filter(|path| path.contains(&"fft".to_string()) && path.contains(&"dac".to_string()))
-        .count()
+    let svr_fft_dac_out = paths(&devices, "svr", "fft").len()
+        * paths(&devices, "fft", "dac").len()
+        * paths(&devices, "dac", "out").len();
+    let svr_dac_fft_out = paths(&devices, "svr", "dac").len()
+        * paths(&devices, "dac", "fft").len()
+        * paths(&devices, "fft", "out").len();
+
+    svr_fft_dac_out + svr_dac_fft_out
 }
 
 struct Node {
@@ -106,18 +110,21 @@ fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>>
 }
 
 fn paths_to_out(devices: &Devices, label: &str) -> Vec<Vec<String>> {
-    if label == "out" {
-        return [["out".to_string()].to_vec()].to_vec();
+    paths(devices, label, "out")
+}
+fn paths(devices: &Devices, from: &str, target: &str) -> Vec<Vec<String>> {
+    if from == target {
+        return [[target.to_string()].to_vec()].to_vec();
     }
 
     devices
-        .get(label)
+        .get(from)
         .unwrap()
         .to
         .iter()
-        .flat_map(|to| paths_to_out(devices, devices.get(to).unwrap().label.as_str()))
+        .flat_map(|to| paths(devices, devices.get(to).unwrap().label.as_str(), target))
         .map(move |mut remaining_path| {
-            remaining_path.insert(0, label.to_string());
+            remaining_path.insert(0, from.to_string());
             remaining_path.clone()
         })
         .collect()
