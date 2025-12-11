@@ -16,6 +16,14 @@ fn solve_1(input: &str) -> usize {
     paths_to_out(&devices, "you").len()
 }
 
+fn solve_2(input: &str) -> usize {
+    let devices = parse(input);
+    paths_to_out(&devices, "svr")
+        .iter()
+        .filter(|path| path.contains(&"fft".to_string()) && path.contains(&"dac".to_string()))
+        .count()
+}
+
 struct Node {
     label: String,
     to: HashSet<String>,
@@ -128,6 +136,22 @@ hhh: ccc fff iii
 iii: out
 ";
 
+#[cfg(test)]
+static EXAMPLE_2: &str = "svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out
+";
+
 #[test]
 fn test_parse() {
     let devices = parse(&EXAMPLE);
@@ -194,4 +218,9 @@ fn test_solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "423");
+}
+
+#[test]
+fn test_solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE_2), 2);
 }
