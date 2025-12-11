@@ -1,4 +1,6 @@
+#[cfg(test)]
 use std::collections::HashMap;
+#[cfg(test)]
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
@@ -23,6 +25,7 @@ fn solve_1(input: &str) -> u64 {
         .unwrap()
 }
 
+#[cfg(test)]
 fn solve_2(input: &str) -> u64 {
     let floor = parse(input);
     let wall_directions = vertical_wall_directions(&floor);
@@ -46,6 +49,7 @@ fn solve_2(input: &str) -> u64 {
     rectangle_size(a, b)
 }
 
+#[cfg(test)]
 fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
     let min_x = rect.0.0.min(rect.1.0);
     let max_x = rect.0.0.max(rect.1.0);
@@ -82,16 +86,21 @@ fn rect_in_contour(rect: &Rectangle, wall_directions: &WallDirections) -> bool {
 }
 
 type Tile = (i64, i64);
+#[cfg(test)]
 type LineSeg<'a> = (&'a Tile, &'a Tile);
+#[cfg(test)]
 type Rectangle<'a> = (&'a Tile, &'a Tile);
 type Floor = Vec<Tile>;
+#[cfg(test)]
 type Contour<'a> = Vec<LineSeg<'a>>;
 
 fn rectangle_size(&a: &Tile, &b: &Tile) -> u64 {
     (((b.0 - a.0).abs() + 1) * ((b.1 - a.1).abs() + 1)) as u64
 }
 
+#[cfg(test)]
 type WallDirections = HashMap<i64, Vec<(i64, bool)>>;
+#[cfg(test)]
 fn vertical_wall_directions(floor: &Floor) -> WallDirections {
     let mut vertical_walls = HashMap::new();
 
@@ -123,6 +132,7 @@ fn parse(input: &str) -> Floor {
         .collect()
 }
 
+#[cfg(test)]
 fn contour(floor: &'_ Floor) -> Contour<'_> {
     floor
         .iter()

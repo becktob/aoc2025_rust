@@ -5,7 +5,8 @@ use std::{iter, vec};
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     if part2 {
-        solve_2(&input).to_string()
+        "WIP".to_string()
+        //solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
@@ -21,6 +22,7 @@ fn solve_1(input: &str) -> usize {
         .sum()
 }
 
+#[cfg(test)]
 fn solve_2(input: &str) -> usize {
     let machines = parse_machines(input);
 
@@ -74,6 +76,7 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
+#[cfg(test)]
 fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
     all_sequences_joltage_lampwise(machine)
         .iter()
@@ -82,6 +85,7 @@ fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
+#[cfg(test)]
 fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     if machine.joltage.len() == 0 {
         return vec![vec![]];

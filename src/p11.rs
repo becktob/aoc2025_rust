@@ -56,6 +56,7 @@ fn parse(input: &'_ str) -> Devices {
     devices
 }
 
+#[cfg(test)]
 fn paths_to_out_grow(devices: &Devices) -> HashMap<String, HashSet<Vec<String>>> {
     let mut paths_to_out = HashMap::new();
     paths_to_out.insert(
@@ -110,6 +111,7 @@ fn paths_to_out(devices: &Devices, label: &str) -> usize {
         .sum()
 }
 
+#[cfg(test)]
 static EXAMPLE: &str = "aaa: you hhh
 you: bbb ccc
 bbb: ddd eee
