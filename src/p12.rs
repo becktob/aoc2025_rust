@@ -1,4 +1,5 @@
 use std::io::BufRead;
+use std::iter;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
@@ -55,6 +56,25 @@ fn parse_region(input: &str) -> Region {
     }
 }
 
+fn shape_fits(
+    region_map: Vec<Vec<bool>>,
+    shape: &PresentShape,
+    offset: (usize, usize),
+    rot90: usize,
+) -> bool {
+    assert_eq!(rot90, 0);
+    !region_map[offset.0..]
+        .iter()
+        .zip(shape.iter())
+        .map(|(region_row, shape_row)| {
+            region_row[offset.1..]
+                .iter()
+                .zip(shape_row.iter())
+                .any(|(&r, &s)| r && s)
+        })
+        .any(|both| both)
+}
+
 static EXAMPLE: &str = "0:
 ###
 ##.
@@ -95,4 +115,12 @@ fn test_parse() {
     let (presents, regions) = parse(EXAMPLE);
     assert_eq!(presents.len(), 6);
     assert_eq!(regions.len(), 3);
+}
+
+#[test]
+fn test_shape_fits_into_empty() {
+    let (presents, regions) = parse(EXAMPLE);
+    let empty_region: Vec<Vec<_>> = iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let fits = shape_fits(empty_region, &presents[4], (0, 0), 0);
+    assert!(fits);
 }
