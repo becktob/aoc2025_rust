@@ -30,6 +30,10 @@ fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
 
 fn parse_shape(input: &str) -> PresentShape {
     input
+        .split_once(':')
+        .unwrap()
+        .1
+        .trim()
         .lines()
         .map(|line| line.chars().map(|c| c == '#').collect())
         .collect()
