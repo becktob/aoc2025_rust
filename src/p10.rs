@@ -22,6 +22,7 @@ fn solve_1(input: &str) -> usize {
         .sum()
 }
 
+#[cfg(test)]
 fn solve_2(input: &str) -> usize {
     let machines = parse_machines(input);
 
@@ -60,6 +61,7 @@ fn configure_machine(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
+#[cfg(test)]
 fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
     all_sequences_joltage_lampwise(&sort_machine(machine))
         .iter()
@@ -68,6 +70,7 @@ fn configure_machine_joltage_lampwise(machine: &Machine) -> ButtonPresses {
         .unwrap()
 }
 
+#[cfg(test)]
 fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
     if machine.joltage.len() == 0 {
         return vec![vec![]];
@@ -180,6 +183,7 @@ fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
         .collect::<Vec<_>>()
 }
 
+#[cfg(test)]
 fn sort_machine(machine: &Machine) -> Machine {
     // least common lamps first
     let mut indices = (0..machine.joltage.len()).collect::<Vec<_>>();
