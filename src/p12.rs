@@ -61,13 +61,13 @@ fn parse_region(input: &str) -> Region {
 }
 
 fn shape_fits(
-    region_map: Vec<Vec<bool>>,
+    region_map: &mut Vec<Vec<bool>>,
     shape: &PresentShape,
     offset: (usize, usize),
     rot90: usize,
 ) -> bool {
     assert_eq!(rot90, 0);
-    !region_map[offset.0..]
+    let fits = !region_map[offset.0..]
         .iter()
         .zip(shape.iter())
         .map(|(region_row, shape_row)| {
@@ -76,7 +76,22 @@ fn shape_fits(
                 .zip(shape_row.iter())
                 .any(|(&r, &s)| r && s)
         })
-        .any(|both| both)
+        .any(|both| both);
+
+    if fits {
+        // insert_piece
+        region_map //[offset.0..]
+            .iter_mut()
+            .zip(shape.iter())
+            .for_each(|(region_row, shape_row)| {
+                region_row[offset.1..]
+                    .iter_mut()
+                    .zip(shape_row.iter())
+                    .for_each(|(mut r, &s)| *r = s)
+            });
+    }
+
+    fits
 }
 
 static EXAMPLE: &str = "0:
@@ -124,7 +139,21 @@ fn test_parse() {
 #[test]
 fn test_shape_fits_into_empty() {
     let (presents, regions) = parse(EXAMPLE);
-    let empty_region: Vec<Vec<_>> = iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
-    let fits = shape_fits(empty_region, &presents[4], (0, 0), 0);
+    let mut empty_region: Vec<Vec<_>> =
+        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
     assert!(fits);
+}
+
+#[test]
+fn test_shape_fits_not_twice() {
+    let (presents, regions) = parse(EXAMPLE);
+    let mut empty_region: Vec<Vec<_>> =
+        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    assert_eq!(empty_region[0][0], false);
+    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
+    assert!(fits);
+    let fits_again = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
+    assert_eq!(empty_region[0][0], true);
+    assert!(!fits_again);
 }
