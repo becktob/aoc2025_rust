@@ -75,9 +75,6 @@ fn parse_problems(input: &&str) -> Vec<Problem> {
 }
 
 fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
-    let n_cols = input.lines().next().unwrap().chars().count();
-    let n_number_rows = input.lines().count() - 1;
-
     let mut operators: HashMap<&str, BinOp> = HashMap::new();
     operators.insert("+", add);
     operators.insert("*", mul);
@@ -89,15 +86,26 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
         .map(|c| *operators.get(c).unwrap())
         .collect();
 
+    let n_number_rows = input.lines().count() - 1;
+    let chars = input
+        .lines()
+        .map(|line| line.chars().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    let number_chars = chars[..n_number_rows].to_vec();
+
+    let n_cols = number_chars[0].len();
+    let n_rows = number_chars.len();
+
     let mut iterators_per_line: Vec<_> =
-        input.lines().into_iter().map(|line| line.chars()).collect();
+        number_chars.into_iter().map(|line| line.into_iter()).collect();
 
     let columns: Vec<Vec<char>> = (0..n_cols)
         .map(|_| {
-            iterators_per_line[0..n_number_rows]
+            iterators_per_line[0..n_rows]
                 .iter_mut()
                 .map(|line| line.next().unwrap())
-                .collect()
+                .collect::<Vec<char>>()
         })
         .collect();
 
