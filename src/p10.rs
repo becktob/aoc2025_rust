@@ -112,8 +112,8 @@ fn all_sequences_joltage_lampwise(machine: &Machine) -> Vec<ButtonPresses> {
 
     all_sequences(buttons_first_lamp.len(), joltage_first_lamp as usize)
         .iter()
-        .filter_map(|mut presses| {
-            let mut joltage_remaining: Vec<i32> = machine.joltage[1..].iter().cloned().collect();;
+        .filter_map(|presses| {
+            let mut joltage_remaining: Vec<i32> = machine.joltage[1..].iter().cloned().collect();
             buttons_first_lamp
                 .iter()
                 .zip(presses)

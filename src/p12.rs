@@ -1,8 +1,8 @@
-use std::io::BufRead;
+#[cfg(test)]
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let _input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
@@ -87,7 +87,7 @@ fn shape_fits(
                 region_row[offset.1..]
                     .iter_mut()
                     .zip(shape_row.iter())
-                    .for_each(|(mut r, &s)| *r = s)
+                    .for_each(|(r, &s)| *r = s)
             });
     }
 
@@ -138,7 +138,7 @@ fn test_parse() {
 
 #[test]
 fn test_shape_fits_into_empty() {
-    let (presents, regions) = parse(EXAMPLE);
+    let (presents, _) = parse(EXAMPLE);
     let mut empty_region: Vec<Vec<_>> =
         iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
     let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
@@ -147,7 +147,7 @@ fn test_shape_fits_into_empty() {
 
 #[test]
 fn test_shape_fits_not_twice() {
-    let (presents, regions) = parse(EXAMPLE);
+    let (presents, _) = parse(EXAMPLE);
     let mut empty_region: Vec<Vec<_>> =
         iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
     assert_eq!(empty_region[0][0], false);

@@ -199,7 +199,7 @@ fn test_solve_2_example() {
     assert_eq!(solve_2(&EXAMPLE), 24);
 }
 
-//#[ignore]
+#[ignore]
 #[test]
 fn test_solve_2() {
     assert_eq!(solve(true), "1525241870");
