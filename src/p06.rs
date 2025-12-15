@@ -116,22 +116,18 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
         .collect()
 }
 
-fn transpose<T>(number_chars: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let n_cols = number_chars[0].len();
-    let n_rows = number_chars.len();
+fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    let n_cols = v[0].len();
+    let mut lines: Vec<_> = v.into_iter().map(|line| line.into_iter()).collect();
 
-    let mut iterators_per_line: Vec<_> =
-        number_chars.into_iter().map(|line| line.into_iter()).collect();
-
-    let columns: Vec<Vec<T>> = (0..n_cols)
+    (0..n_cols)
         .map(|_| {
-            iterators_per_line[0..n_rows]
+            lines
                 .iter_mut()
                 .map(|line| line.next().unwrap())
                 .collect::<Vec<T>>()
         })
-        .collect();
-    columns
+        .collect()
 }
 
 #[cfg(test)]
