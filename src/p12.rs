@@ -1,3 +1,4 @@
+use crate::helpers;
 #[cfg(test)]
 use std::iter;
 
@@ -66,7 +67,10 @@ fn shape_fits(
     offset: (usize, usize),
     rot90: usize,
 ) -> bool {
-    assert_eq!(rot90, 0);
+    // todo: less cloning, more refs/views
+    let mut shape = shape.clone();
+    (0..rot90).for_each(|_| shape = helpers::rot90(shape.clone()));
+
     let fits = !region_map[offset.0..]
         .iter()
         .zip(shape.iter())
@@ -156,4 +160,15 @@ fn test_shape_fits_not_twice() {
     let fits_again = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
     assert_eq!(empty_region[0][0], true);
     assert!(!fits_again);
+}
+
+#[test]
+fn test_shape_fits_rotated() {
+    let (presents, _) = parse(EXAMPLE);
+    let mut empty_region: Vec<Vec<_>> =
+        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
+    assert!(fits);
+    let fits_rotated = shape_fits(&mut empty_region, &presents[4], (1, 1), 2);
+    assert!(fits_rotated);
 }
