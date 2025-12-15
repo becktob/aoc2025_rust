@@ -94,20 +94,7 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
 
     let number_chars = chars[..n_number_rows].to_vec();
 
-    let n_cols = number_chars[0].len();
-    let n_rows = number_chars.len();
-
-    let mut iterators_per_line: Vec<_> =
-        number_chars.into_iter().map(|line| line.into_iter()).collect();
-
-    let columns: Vec<Vec<char>> = (0..n_cols)
-        .map(|_| {
-            iterators_per_line[0..n_rows]
-                .iter_mut()
-                .map(|line| line.next().unwrap())
-                .collect::<Vec<char>>()
-        })
-        .collect();
+    let columns = transpose(number_chars);
 
     let blocks = columns
         .split(|col| col.iter().all(|&char| char == ' '))
@@ -127,6 +114,24 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
         .zip(operators)
         .map(|(numbers, operator)| Problem { numbers, operator })
         .collect()
+}
+
+fn transpose<T>(number_chars: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    let n_cols = number_chars[0].len();
+    let n_rows = number_chars.len();
+
+    let mut iterators_per_line: Vec<_> =
+        number_chars.into_iter().map(|line| line.into_iter()).collect();
+
+    let columns: Vec<Vec<T>> = (0..n_cols)
+        .map(|_| {
+            iterators_per_line[0..n_rows]
+                .iter_mut()
+                .map(|line| line.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect();
+    columns
 }
 
 #[cfg(test)]
