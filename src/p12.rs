@@ -1,5 +1,4 @@
 use crate::helpers;
-#[cfg(test)]
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
@@ -14,10 +13,15 @@ pub fn solve(part2: bool) -> String {
 }
 
 type PresentShape = Vec<Vec<bool>>;
+type RegionMap = Vec<Vec<bool>>;
 struct Region {
     width: usize,
     height: usize,
     presets_needed: Vec<usize>,
+}
+
+fn empty_region(w: usize, h: usize) -> RegionMap {
+    iter::repeat_n(iter::repeat_n(false, w).collect(), h).collect()
 }
 
 fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
@@ -62,7 +66,7 @@ fn parse_region(input: &str) -> Region {
 }
 
 fn shape_fits(
-    region_map: &mut Vec<Vec<bool>>,
+    region_map: &mut RegionMap,
     shape: &PresentShape,
     offset: (usize, usize),
     rot90: usize,
@@ -143,8 +147,7 @@ fn test_parse() {
 #[test]
 fn test_shape_fits_into_empty() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region: Vec<Vec<_>> =
-        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let mut empty_region = empty_region(4, 4);
     let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
     assert!(fits);
 }
@@ -152,8 +155,7 @@ fn test_shape_fits_into_empty() {
 #[test]
 fn test_shape_fits_not_twice() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region: Vec<Vec<_>> =
-        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let mut empty_region = empty_region(4, 4);
     assert_eq!(empty_region[0][0], false);
     let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
     assert!(fits);
@@ -165,8 +167,7 @@ fn test_shape_fits_not_twice() {
 #[test]
 fn test_shape_fits_rotated() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region: Vec<Vec<_>> =
-        iter::repeat_n(iter::repeat_n(false, 4).collect(), 4).collect();
+    let mut empty_region = empty_region(4, 4);
     let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
     assert!(fits);
     let fits_rotated = shape_fits(&mut empty_region, &presents[4], (1, 1), 2);
