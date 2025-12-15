@@ -12,6 +12,7 @@ mod p09;
 mod p10;
 mod p11;
 mod p12;
+mod helpers;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::helpers;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_06.txt").expect("could not read file");
@@ -94,7 +95,7 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
 
     let number_chars = chars[..n_number_rows].to_vec();
 
-    let columns = transpose(number_chars);
+    let columns = helpers::transpose(number_chars);
 
     let blocks = columns
         .split(|col| col.iter().all(|&char| char == ' '))
@@ -113,20 +114,6 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
         .into_iter()
         .zip(operators)
         .map(|(numbers, operator)| Problem { numbers, operator })
-        .collect()
-}
-
-fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let n_cols = v[0].len();
-    let mut lines: Vec<_> = v.into_iter().map(|line| line.into_iter()).collect();
-
-    (0..n_cols)
-        .map(|_| {
-            lines
-                .iter_mut()
-                .map(|line| line.next().unwrap())
-                .collect::<Vec<T>>()
-        })
         .collect()
 }
 
