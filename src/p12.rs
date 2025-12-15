@@ -65,12 +65,12 @@ fn parse_region(input: &str) -> Region {
     }
 }
 
-fn shape_fits(
-    region_map: &mut RegionMap,
+fn put_shape_into(
+    region_map: &RegionMap,
     shape: &PresentShape,
     offset: (usize, usize),
     rot90: usize,
-) -> bool {
+) -> Option<RegionMap> {
     // todo: less cloning, more refs/views
     let mut shape = shape.clone();
     (0..rot90).for_each(|_| shape = helpers::rot90(shape.clone()));
@@ -88,7 +88,8 @@ fn shape_fits(
 
     if fits {
         // insert_piece
-        region_map //[offset.0..]
+        let mut filled_map = region_map.clone();
+        filled_map //[offset.0..]
             .iter_mut()
             .zip(shape.iter())
             .for_each(|(region_row, shape_row)| {
@@ -97,9 +98,11 @@ fn shape_fits(
                     .zip(shape_row.iter())
                     .for_each(|(r, &s)| *r = s)
             });
+        Some(filled_map)
     }
-
-    fits
+    else{
+        None
+    }
 }
 
 static EXAMPLE: &str = "0:
@@ -145,31 +148,32 @@ fn test_parse() {
 }
 
 #[test]
-fn test_shape_fits_into_empty() {
+fn test_put_shape_into_empty() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region = empty_region(4, 4);
-    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
-    assert!(fits);
+    let empty_region = empty_region(4, 4);
+    let region_with_piece = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
+    assert!(region_with_piece.is_some());
 }
 
 #[test]
-fn test_shape_fits_not_twice() {
+fn test_put_shape_into_not_twice() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region = empty_region(4, 4);
+    let empty_region = empty_region(4, 4);
     assert_eq!(empty_region[0][0], false);
-    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
-    assert!(fits);
-    let fits_again = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
-    assert_eq!(empty_region[0][0], true);
-    assert!(!fits_again);
+    let region_with_first = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
+    assert!(region_with_first.is_some());
+    let region_with_first = region_with_first.unwrap();
+    assert_eq!(region_with_first[0][0], true);
+    let region_with_second = put_shape_into(&region_with_first, &presents[4], (0, 0), 0);
+    assert!(region_with_second.is_none());
 }
 
 #[test]
-fn test_shape_fits_rotated() {
+fn test_put_shape_into_rotated() {
     let (presents, _) = parse(EXAMPLE);
-    let mut empty_region = empty_region(4, 4);
-    let fits = shape_fits(&mut empty_region, &presents[4], (0, 0), 0);
-    assert!(fits);
-    let fits_rotated = shape_fits(&mut empty_region, &presents[4], (1, 1), 2);
-    assert!(fits_rotated);
+    let empty_region = empty_region(4, 4);
+    let region_with_first = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
+    assert!(region_with_first.is_some());
+    let region_with_rotated = put_shape_into(&empty_region, &presents[4], (1, 1), 2);
+    assert!(region_with_rotated.is_some());
 }
