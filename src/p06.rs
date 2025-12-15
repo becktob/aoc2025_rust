@@ -99,7 +99,6 @@ fn parse_input_cephalopod(input: &str) -> Vec<Problem> {
                 .map(|line| line.next().unwrap())
                 .collect()
         })
-        .rev()
         .collect();
 
     let blocks = columns
