@@ -3,18 +3,25 @@ use std::collections::{HashMap, HashSet};
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
-    let _input = std::fs::read_to_string("input_12.txt").expect("could not read file");
+    let input = std::fs::read_to_string("input_12.txt").expect("could not read file");
     if part2 {
         "WIP".to_string()
         //solve_2(&input).to_string()
     } else {
-        "WIP".to_string()
-        //crate::p10::solve_1(&input).to_string()
+        solve_1(&input).to_string()
     }
 }
 
 // Idea: Do all pairwise colliding once (including scanning, rotating...)
 // -> Search in large region is simpler and hashable
+
+fn solve_1(input: &str) -> usize {
+    let (presents, regions) = parse(input);
+    regions
+        .iter()
+        .filter_map(|region| fill_region(region, &presents))
+        .count()
+}
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct PairOrientation {
@@ -101,7 +108,7 @@ fn collision_map(presents: &Vec<PresentShape>) -> CollisionMap {
         .collect()
 }
 
-fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<Vec<HashSet<PlacedPresent>>> {
+fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<HashSet<PlacedPresent>> {
     let collisions = collision_map(shapes);
     let shapes_todo = region
         .presets_needed
@@ -118,9 +125,9 @@ fn fill_iter(
     present_positions: HashSet<PlacedPresent>,
     w_h: (usize, usize),
     collisions: &CollisionMap,
-) -> Option<Vec<HashSet<PlacedPresent>>> {
+) -> Option<HashSet<PlacedPresent>> {
     if presents_todo.is_empty() {
-        return Some(vec![present_positions]);
+        return Some(present_positions);
     }
 
     let this_present = presents_todo[0];
@@ -167,14 +174,9 @@ fn fill_iter(
                 .collect();
             fill_iter(remaining_presents.clone(), positions, w_h, collisions)
         })
-        .flatten()
-        .collect::<Vec<_>>();
+        .next();
 
-    if fillings.is_empty() {
-        None
-    } else {
-        Some(fillings)
-    }
+    if fillings.is_none() { None } else { fillings }
 }
 
 #[test]
@@ -238,11 +240,9 @@ fn test_fill_iter_puts_one_present() {
     let (presents, _) = parse(EXAMPLE);
     let collisions = collision_map(&presents);
     let presents_todo = vec![4];
-    let fillings = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
+    let filling = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
 
-    assert!(fillings.is_some());
-    let fillings = fillings.unwrap();
-    assert_eq!(fillings.len(), 4);
+    assert!(filling.is_some());
 }
 
 #[test]
@@ -250,9 +250,9 @@ fn test_fill_iter_cant_put_two_presents() {
     let (presents, _) = parse(EXAMPLE);
     let collisions = collision_map(&presents);
     let presents_todo = vec![4, 4];
-    let fillings = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
+    let filling = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
 
-    assert!(fillings.is_none());
+    assert!(filling.is_none());
 }
 
 #[test]
@@ -269,4 +269,17 @@ fn test_fill_iter_can_put_two_presents_in_4_by_4() {
 fn test_fill_region() {
     let (presents, regions) = parse(EXAMPLE);
     assert!(fill_region(&regions[0], &presents).is_some());
+}
+
+#[test]
+fn test_fill_region_2() {
+    let (presents, regions) = parse(EXAMPLE);
+    let filling = fill_region(&regions[1], &presents);
+    assert!(filling.is_some());
+}
+
+#[ignore]
+#[test]
+fn solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 2)
 }
