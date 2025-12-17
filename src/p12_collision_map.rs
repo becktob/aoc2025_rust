@@ -21,8 +21,18 @@ struct PairOrientation {
     // delta = [a to b] = i_b - i_a
     delta_i: i32,
     delta_j: i32,
-    rot_a: i8,
-    rot_b: i8,
+    rot_a: u8,
+    rot_b: u8,
+}
+
+type CollisionMap = HashMap<(u8, u8), HashSet<PairOrientation>>;
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+struct PlacedPresent {
+    n: u8,
+    i: i32,
+    j: i32,
+    rot: u8,
 }
 
 fn pair_collides(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> bool {
@@ -76,9 +86,7 @@ fn collision_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
         .collect()
 }
 
-fn collision_map(
-    presents: &Vec<PresentShape>,
-) -> HashMap<(usize, usize), HashSet<PairOrientation>> {
+fn collision_map(presents: &Vec<PresentShape>) -> CollisionMap {
     presents
         .iter()
         .enumerate()
@@ -87,10 +95,74 @@ fn collision_map(
                 let collisions = collision_pair(a, b)
                     .into_iter()
                     .collect::<HashSet<PairOrientation>>();
-                ((m, n), collisions)
+                ((m as u8, n as u8), collisions)
             })
         })
         .collect()
+}
+
+fn fill_iter(
+    presents_todo: Vec<u8>,
+    present_positions: HashSet<PlacedPresent>,
+    w_h: (usize, usize),
+    collisions: &CollisionMap,
+) -> Option<Vec<HashSet<PlacedPresent>>> {
+    if presents_todo.is_empty() {
+        return Some(vec![present_positions]);
+    }
+
+    let this_present = presents_todo[0];
+    let remaining_presents = presents_todo[1..].to_vec();
+
+    let (w, h) = w_h;
+    let present_size = 3; // todo hardcoded
+    let w_max = (w - present_size) as i32;
+    let h_max = (h - present_size) as i32;
+
+    let all_orientations = (0..=h_max)
+        .flat_map(|i| {
+            (0..=w_max).flat_map(move |j| {
+                (0..4).map(move |rot| PlacedPresent {
+                    n: this_present,
+                    i,
+                    j,
+                    rot,
+                })
+            })
+        })
+        .collect::<Vec<PlacedPresent>>();
+
+    let fits = |o: &PlacedPresent| -> bool {
+        !present_positions.iter().any(|p| {
+            let pair = PairOrientation {
+                delta_i: p.i as i32 - o.i as i32,
+                delta_j: p.j as i32 - o.j as i32,
+                rot_a: o.rot,
+                rot_b: p.rot,
+            };
+            collisions.get(&(o.n, p.n)).unwrap().contains(&pair)
+        })
+    };
+
+    let fillings = all_orientations
+        .into_iter()
+        .filter(fits)
+        .filter_map(|new_position| {
+            let positions = present_positions
+                .iter()
+                .cloned()
+                .chain(iter::once(new_position))
+                .collect();
+            fill_iter(remaining_presents.clone(), positions, w_h, collisions)
+        })
+        .flatten()
+        .collect::<Vec<_>>();
+
+    if fillings.is_empty() {
+        None
+    } else {
+        Some(fillings)
+    }
 }
 
 #[test]
@@ -143,8 +215,32 @@ fn test_collides_exploratory() {
 fn test_collision_map() {
     let (presents, _) = parse(EXAMPLE);
     let map = collision_map(&presents);
-    assert_eq!(map.len(), presents.len()*presents.len());
+    assert_eq!(map.len(), presents.len() * presents.len());
 
-    let collisions_4_4= map.get(&(4, 4)).unwrap();
-    assert_eq!(collisions_4_4.len(), 384);  // see test_collision_pair()
+    let collisions_4_4 = map.get(&(4, 4)).unwrap();
+    assert_eq!(collisions_4_4.len(), 384); // see test_collision_pair()
+}
+
+#[test]
+fn test_fill_iter_puts_one_present() {
+    let (presents, _) = parse(EXAMPLE);
+    let collisions = collision_map(&presents);
+    let presents_todo = vec![4];
+    let fillings = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
+
+    assert!(fillings.is_some());
+    let fillings = fillings.unwrap();
+    assert_eq!(fillings.len(), 4);
+}
+
+#[test]
+fn test_fill_iter_cant_put_two_presents() {
+    let (presents, _) = parse(EXAMPLE);
+    let collisions = collision_map(&presents);
+    let presents_todo = vec![4, 4];
+    let fillings = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
+
+    println!("{:?}", fillings);
+
+    assert!(fillings.is_none());
 }
