@@ -99,9 +99,70 @@ fn put_shape_into(
                     .for_each(|(r, &s)| *r = s)
             });
         Some(filled_map)
-    }
-    else{
+    } else {
         None
+    }
+}
+
+fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<RegionMap> {
+    let shapes_todo: Vec<_> = shapes
+        .iter()
+        .zip(region.presets_needed.iter())
+        .flat_map(|(shape, &times_needed)| iter::repeat_n(shape, times_needed))
+        .cloned()
+        .collect();
+
+    let region_in_progess = empty_region(region.width, region.height);
+
+    fill_region_iter(region_in_progess, shapes_todo)
+        .iter()
+        .next()?
+        .get(0)
+        .cloned()
+}
+
+fn fill_region_iter(
+    region_in_progress: RegionMap,
+    shapes_todo: Vec<PresentShape>,
+) -> Option<Vec<RegionMap>> {
+    if shapes_todo.is_empty() {
+        // nothing to do, this is a solution!
+        return Some(vec![region_in_progress]);
+    }
+
+    let this_shape = shapes_todo[0].clone();
+
+    let h = region_in_progress.len();
+    let w = region_in_progress[0].len();
+
+    let try_to_insert_this_shape = |n_rot, i, j| {
+        let region_clone = region_in_progress.iter().cloned().collect();
+        let region_with_this_shape = put_shape_into(&region_clone, &this_shape, (i, j), n_rot);
+        region_with_this_shape
+    };
+
+    let fill_region_with_remaining = |region_with_this_shape: RegionMap| {
+        let remaining_shapes = shapes_todo[1..].iter().cloned().collect::<Vec<_>>();
+        fill_region_iter(region_with_this_shape.clone(), remaining_shapes)
+    };
+
+    let fillings = (0..4)
+        .flat_map(|n_rot| {
+            (0..h).flat_map(move |i| {
+                (0..w)
+                    .filter_map(move |j| try_to_insert_this_shape(n_rot, i, j))
+                    .filter_map(move |region_with_this_shape| {
+                        fill_region_with_remaining(region_with_this_shape)
+                    })
+                    .flatten()
+            })
+        })
+        .collect::<Vec<_>>();
+
+    if fillings.is_empty() {
+        None
+    } else {
+        Some(fillings)
     }
 }
 
@@ -176,4 +237,19 @@ fn test_put_shape_into_rotated() {
     assert!(region_with_first.is_some());
     let region_with_rotated = put_shape_into(&empty_region, &presents[4], (1, 1), 2);
     assert!(region_with_rotated.is_some());
+}
+
+#[test]
+fn test_fill_region() {
+    let (presents, regions) = parse(EXAMPLE);
+    let filling = fill_region(&regions[0], &presents);
+    assert!(filling.is_some());
+}
+
+#[test]
+fn test_fill_region_iter_terminates_when_nothing_left_todo() {
+    let region = empty_region(2,2);
+    let todo = vec![];
+    let iter_result = fill_region_iter(region, todo);
+    assert!(iter_result.is_some());
 }
