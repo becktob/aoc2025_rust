@@ -24,9 +24,9 @@ fn solve_1(input: &str) -> usize {
 pub type PresentShape = Vec<Vec<bool>>;
 pub type RegionMap = Vec<Vec<bool>>;
 pub struct Region {
-    width: usize,
-    height: usize,
-    presets_needed: Vec<usize>,
+    pub width: usize,
+    pub height: usize,
+    pub presets_needed: Vec<usize>,
 }
 
 pub fn empty_region(w: usize, h: usize) -> RegionMap {

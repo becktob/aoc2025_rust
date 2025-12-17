@@ -1,4 +1,4 @@
-use crate::p12::{EXAMPLE, PresentShape, RegionMap, empty_region, parse, put_shape_into};
+use crate::p12::{EXAMPLE, PresentShape, Region, RegionMap, empty_region, parse, put_shape_into};
 use std::collections::{HashMap, HashSet};
 use std::iter;
 
@@ -99,6 +99,18 @@ fn collision_map(presents: &Vec<PresentShape>) -> CollisionMap {
             })
         })
         .collect()
+}
+
+fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<Vec<HashSet<PlacedPresent>>> {
+    let collisions = collision_map(shapes);
+    let shapes_todo = region
+        .presets_needed
+        .iter()
+        .zip(0..)
+        .flat_map(|(&times_needed, shape_no)| iter::repeat_n(shape_no, times_needed))
+        .collect();
+    let w_h = (region.width, region.height);
+    fill_iter(shapes_todo, HashSet::new(), w_h, &collisions)
 }
 
 fn fill_iter(
@@ -240,7 +252,21 @@ fn test_fill_iter_cant_put_two_presents() {
     let presents_todo = vec![4, 4];
     let fillings = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
 
-    println!("{:?}", fillings);
-
     assert!(fillings.is_none());
+}
+
+#[test]
+fn test_fill_iter_can_put_two_presents_in_4_by_4() {
+    let (presents, _) = parse(EXAMPLE);
+    let collisions = collision_map(&presents);
+    let presents_todo = vec![4, 4];
+    let fillings = fill_iter(presents_todo, HashSet::new(), (4, 4), &collisions);
+
+    assert!(fillings.is_some());
+}
+
+#[test]
+fn test_fill_region() {
+    let (presents, regions) = parse(EXAMPLE);
+    assert!(fill_region(&regions[0], &presents).is_some());
 }
