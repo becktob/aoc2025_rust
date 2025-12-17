@@ -21,19 +21,19 @@ fn solve_1(input: &str) -> usize {
         .count()
 }
 
-type PresentShape = Vec<Vec<bool>>;
-type RegionMap = Vec<Vec<bool>>;
-struct Region {
+pub type PresentShape = Vec<Vec<bool>>;
+pub type RegionMap = Vec<Vec<bool>>;
+pub struct Region {
     width: usize,
     height: usize,
     presets_needed: Vec<usize>,
 }
 
-fn empty_region(w: usize, h: usize) -> RegionMap {
+pub fn empty_region(w: usize, h: usize) -> RegionMap {
     iter::repeat_n(iter::repeat_n(false, w).collect(), h).collect()
 }
 
-fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
+pub fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
     let (presents_raw, regions_raw) = input.rsplit_once("\n\n").unwrap();
 
     let presents = presents_raw.split("\n\n").map(parse_shape).collect();
@@ -74,7 +74,7 @@ fn parse_region(input: &str) -> Region {
     }
 }
 
-fn put_shape_into(
+pub fn put_shape_into(
     region_map: &RegionMap,
     shape: &PresentShape,
     offset: (usize, usize),
@@ -190,7 +190,7 @@ fn fill_region_iter(
     }
 }
 
-static EXAMPLE: &str = "0:
+pub(crate) static EXAMPLE: &str = "0:
 ###
 ##.
 ##.
@@ -284,7 +284,7 @@ fn test_fill_region_2() {
 }
 
 #[cfg(test)]
-fn print_region_map(region_map: &RegionMap) {
+pub fn print_region_map(region_map: &RegionMap) {
     let chars = region_map
         .iter()
         .map(|row| {

@@ -13,6 +13,7 @@ mod p10;
 mod p11;
 mod p12;
 mod helpers;
+mod p12_collision_map;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
