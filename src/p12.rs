@@ -89,14 +89,14 @@ fn put_shape_into(
     if fits {
         // insert_piece
         let mut filled_map = region_map.clone();
-        filled_map //[offset.0..]
+        filled_map[offset.0..]
             .iter_mut()
             .zip(shape.iter())
             .for_each(|(region_row, shape_row)| {
                 region_row[offset.1..]
                     .iter_mut()
                     .zip(shape_row.iter())
-                    .for_each(|(r, &s)| *r = s)
+                    .for_each(|(r, &s)| *r |= s)
             });
         Some(filled_map)
     } else {
@@ -133,6 +133,7 @@ fn fill_region_iter(
     let this_shape = shapes_todo[0].clone();
 
     let present_size = 3;
+    assert_eq!(shapes_todo[0].len(), present_size);
     let max_offset_h = region_in_progress.len() - present_size;
     let max_offset_w = region_in_progress[0].len() - present_size;
 
@@ -246,8 +247,27 @@ fn test_fill_region() {
     let filling = fill_region(&regions[0], &presents);
     assert!(filling.is_some());
 
-    let filled_count = filling.unwrap().iter().flatten().filter(|&p| *p).count();
+    let filling = filling.unwrap();
+    print_region_map(&filling);
+
+    let filled_count = filling.iter().flatten().filter(|&p| *p).count();
     assert_eq!(filled_count, 2 * 7);
+}
+
+#[cfg(test)]
+fn print_region_map(region_map: &RegionMap) {
+    let chars = region_map
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|&b| if b { '#' } else { '.' })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    chars
+        .iter()
+        .for_each(|row| println!("{:?}", String::from_iter(row.iter())));
+    println!();
 }
 
 #[test]
@@ -267,7 +287,7 @@ fn test_fill_region_iter_inserts_single_piece() {
     let iter_result = fill_region_iter(region, todo);
     assert!(iter_result.is_some());
     let fillings = iter_result.unwrap();
-    assert_eq!(fillings.len(), 4);  // 4 rotations
+    assert_eq!(fillings.len(), 4); // 4 rotations
     let filled_count = fillings[0].iter().flatten().filter(|&p| *p).count();
     let present_count = p4.iter().flatten().filter(|&p| *p).count();
     assert_eq!(filled_count, present_count);
