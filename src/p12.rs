@@ -1,5 +1,6 @@
 use crate::helpers;
 use std::iter;
+use std::sync::Mutex;
 
 pub fn solve(part2: bool) -> String {
     let _input = std::fs::read_to_string("input_10.txt").expect("could not read file");
@@ -10,6 +11,14 @@ pub fn solve(part2: bool) -> String {
         "WIP".to_string()
         //crate::p10::solve_1(&input).to_string()
     }
+}
+
+fn solve_1(input: &str) -> usize {
+    let (presents, regions) = parse(input);
+    regions
+        .iter()
+        .filter_map(|region| fill_region(region, &presents))
+        .count()
 }
 
 type PresentShape = Vec<Vec<bool>>;
@@ -104,7 +113,11 @@ fn put_shape_into(
     }
 }
 
+static FILL_ITER_CALL_COUNT: Mutex<usize> = Mutex::new(0);
+
 fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<RegionMap> {
+    *FILL_ITER_CALL_COUNT.lock().unwrap() = 0;
+
     let shapes_todo: Vec<_> = shapes
         .iter()
         .zip(region.presets_needed.iter())
@@ -114,11 +127,18 @@ fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<RegionMap>
 
     let region_in_progess = empty_region(region.width, region.height);
 
-    fill_region_iter(region_in_progess, shapes_todo)
+    let fillings = fill_region_iter(region_in_progess, shapes_todo)
         .iter()
         .next()?
         .get(0)
-        .cloned()
+        .cloned();
+
+    println!(
+        "filled region with {} calls to fill_region_iter()",
+        FILL_ITER_CALL_COUNT.lock().unwrap()
+    );
+
+    fillings
 }
 
 fn fill_region_iter(
@@ -129,6 +149,8 @@ fn fill_region_iter(
         // nothing to do, this is a solution!
         return Some(vec![region_in_progress]);
     }
+
+    *FILL_ITER_CALL_COUNT.lock().unwrap() += 1;
 
     let this_shape = shapes_todo[0].clone();
 
@@ -254,6 +276,13 @@ fn test_fill_region() {
     assert_eq!(filled_count, 2 * 7);
 }
 
+#[test]
+fn test_fill_region_2() {
+    let (presents, regions) = parse(EXAMPLE);
+    let filling = fill_region(&regions[1], &presents);
+    assert!(filling.is_some());
+}
+
 #[cfg(test)]
 fn print_region_map(region_map: &RegionMap) {
     let chars = region_map
@@ -291,4 +320,10 @@ fn test_fill_region_iter_inserts_single_piece() {
     let filled_count = fillings[0].iter().flatten().filter(|&p| *p).count();
     let present_count = p4.iter().flatten().filter(|&p| *p).count();
     assert_eq!(filled_count, present_count);
+}
+
+#[ignore]
+#[test]
+fn test_solve_1_example() {
+    assert_eq!(solve_1(EXAMPLE), 2);
 }
