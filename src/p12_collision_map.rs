@@ -1,6 +1,4 @@
-use crate::p12::{
-    EXAMPLE, PresentShape, RegionMap, empty_region, parse, print_region_map, put_shape_into,
-};
+use crate::p12::{EXAMPLE, PresentShape, RegionMap, empty_region, parse, put_shape_into};
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
