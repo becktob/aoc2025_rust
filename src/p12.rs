@@ -132,8 +132,9 @@ fn fill_region_iter(
 
     let this_shape = shapes_todo[0].clone();
 
-    let h = region_in_progress.len();
-    let w = region_in_progress[0].len();
+    let present_size = 3;
+    let max_offset_h = region_in_progress.len() - present_size;
+    let max_offset_w = region_in_progress[0].len() - present_size;
 
     let try_to_insert_this_shape = |n_rot, i, j| {
         let region_clone = region_in_progress.iter().cloned().collect();
@@ -148,8 +149,8 @@ fn fill_region_iter(
 
     let fillings = (0..4)
         .flat_map(|n_rot| {
-            (0..h).flat_map(move |i| {
-                (0..w)
+            (0..=max_offset_h).flat_map(move |i| {
+                (0..=max_offset_w)
                     .filter_map(move |j| try_to_insert_this_shape(n_rot, i, j))
                     .filter_map(move |region_with_this_shape| {
                         fill_region_with_remaining(region_with_this_shape)
@@ -244,12 +245,30 @@ fn test_fill_region() {
     let (presents, regions) = parse(EXAMPLE);
     let filling = fill_region(&regions[0], &presents);
     assert!(filling.is_some());
+
+    let filled_count = filling.unwrap().iter().flatten().filter(|&p| *p).count();
+    assert_eq!(filled_count, 2 * 7);
 }
 
 #[test]
 fn test_fill_region_iter_terminates_when_nothing_left_todo() {
-    let region = empty_region(2,2);
+    let region = empty_region(2, 2);
     let todo = vec![];
     let iter_result = fill_region_iter(region, todo);
     assert!(iter_result.is_some());
+}
+
+#[test]
+fn test_fill_region_iter_inserts_single_piece() {
+    let (presents, _) = parse(EXAMPLE);
+    let region = empty_region(3, 3);
+    let p4 = presents[4].iter().cloned().collect::<Vec<_>>();
+    let todo = vec![p4.clone()];
+    let iter_result = fill_region_iter(region, todo);
+    assert!(iter_result.is_some());
+    let fillings = iter_result.unwrap();
+    assert_eq!(fillings.len(), 4);  // 4 rotations
+    let filled_count = fillings[0].iter().flatten().filter(|&p| *p).count();
+    let present_count = p4.iter().flatten().filter(|&p| *p).count();
+    assert_eq!(filled_count, present_count);
 }
