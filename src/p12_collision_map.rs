@@ -51,7 +51,7 @@ fn combine_pair(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> Opti
     )
 }
 
-fn collision_map(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
+fn collision_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
     // Todo: make use of symmetries (e.g. delta > 0)
     // Todo: all_orientations could be computed one single time
     // Todo: store non-collisions instead (inside 3x3, there are less non-c than collisions)
@@ -76,9 +76,9 @@ fn collision_map(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
 }
 
 #[test]
-fn test_collision_map() {
+fn test_collision_pair() {
     let (presents, regions) = parse(EXAMPLE);
-    let collisions = collision_map(&presents[4], &presents[4]);
+    let collisions = collision_pair(&presents[4], &presents[4]);
 
     let non_collisions = massive_block_collisions()
         .into_iter()
@@ -95,7 +95,7 @@ fn test_collision_map() {
 }
 
 #[test]
-fn test_collision_map_massive_block() {
+fn test_collision_pair_massive_block() {
     let collisions = massive_block_collisions();
     assert_eq!(collisions.len(), 25 * 4 * 4);
 }
@@ -103,7 +103,7 @@ fn test_collision_map_massive_block() {
 #[cfg(test)]
 fn massive_block_collisions() -> Vec<PairOrientation> {
     let block = iter::repeat_n(iter::repeat_n(true, 3).collect(), 3).collect();
-    let collisions = collision_map(&block, &block);
+    let collisions = collision_pair(&block, &block);
     collisions
 }
 
