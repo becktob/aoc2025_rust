@@ -135,8 +135,8 @@ fn fill_iter(
 
     let (w, h) = w_h;
     let present_size = 3; // todo hardcoded
-    let w_max = (w - present_size) as i32;
-    let h_max = (h - present_size) as i32;
+    let w_max = w as i32 - present_size;
+    let h_max = h as i32 - present_size;
 
     let all_orientations = (0..=h_max)
         .flat_map(|i| {
@@ -153,9 +153,15 @@ fn fill_iter(
 
     let fits = |o: &PlacedPresent| -> bool {
         !present_positions.iter().any(|p| {
+            let delta_i = p.i - o.i;
+            let delta_j = p.j - o.j;
+            if delta_i >= present_size || delta_j >= present_size {
+                return true;
+            }
+
             let pair = PairOrientation {
-                delta_i: p.i as i32 - o.i as i32,
-                delta_j: p.j as i32 - o.j as i32,
+                delta_i,
+                delta_j,
                 rot_a: o.rot,
                 rot_b: p.rot,
             };
@@ -278,7 +284,6 @@ fn test_fill_region_2() {
     assert!(filling.is_some());
 }
 
-#[ignore]
 #[test]
 fn solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 2)
