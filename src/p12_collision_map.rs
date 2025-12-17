@@ -1,4 +1,5 @@
 use crate::p12::{EXAMPLE, PresentShape, RegionMap, empty_region, parse, put_shape_into};
+use std::collections::{HashMap, HashSet};
 use std::iter;
 
 pub fn solve(part2: bool) -> String {
@@ -15,7 +16,7 @@ pub fn solve(part2: bool) -> String {
 // Idea: Do all pairwise colliding once (including scanning, rotating...)
 // -> Search in large region is simpler and hashable
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct PairOrientation {
     // delta = [a to b] = i_b - i_a
     delta_i: i32,
@@ -75,6 +76,23 @@ fn collision_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
         .collect()
 }
 
+fn collision_map(
+    presents: &Vec<PresentShape>,
+) -> HashMap<(usize, usize), HashSet<PairOrientation>> {
+    presents
+        .iter()
+        .enumerate()
+        .flat_map(|(m, a)| {
+            presents.iter().enumerate().map(move |(n, b)| {
+                let collisions = collision_pair(a, b)
+                    .into_iter()
+                    .collect::<HashSet<PairOrientation>>();
+                ((m, n), collisions)
+            })
+        })
+        .collect()
+}
+
 #[test]
 fn test_collision_pair() {
     let (presents, regions) = parse(EXAMPLE);
@@ -92,6 +110,7 @@ fn test_collision_pair() {
     // *2 interlock by 1 or by 2
 
     assert_eq!(non_collisions.len(), 4 * 2 * 2);
+    assert_eq!(collisions.len(), 384)
 }
 
 #[test]
@@ -118,4 +137,14 @@ fn test_collides_exploratory() {
     };
 
     assert!(pair_collides(&presents[4], &presents[4], &o));
+}
+
+#[test]
+fn test_collision_map() {
+    let (presents, _) = parse(EXAMPLE);
+    let map = collision_map(&presents);
+    assert_eq!(map.len(), presents.len()*presents.len());
+
+    let collisions_4_4= map.get(&(4, 4)).unwrap();
+    assert_eq!(collisions_4_4.len(), 384);  // see test_collision_pair()
 }
