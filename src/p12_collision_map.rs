@@ -137,9 +137,20 @@ fn fill_iter(
     let w_max = w as i32 - present_size;
     let h_max = h as i32 - present_size;
 
-    let all_orientations = (0..=h_max)
+    let h_min = present_positions
+        .iter()
+        .filter(|p| p.n == this_present)
+        .min_by_key(|&p| p.i)
+        .map_or(0, |p| p.i);
+    let w_min = present_positions
+        .iter()
+        .filter(|p| p.n == this_present)
+        .min_by_key(|&p| p.j)
+        .map_or(0, |p| p.j);
+
+    let all_orientations = (h_min..=h_max)
         .flat_map(|i| {
-            (0..=w_max).flat_map(move |j| {
+            (w_min..=w_max).flat_map(move |j| {
                 (0..4).map(move |rot| PlacedPresent {
                     n: this_present,
                     i,
@@ -273,7 +284,7 @@ fn test_fill_region_no_solution() {
     };
     let filling = fill_region(&region, &presents);
     assert!(filling.is_none());
-    // 34s
+    // 34s -> 4s21
 }
 
 #[test]
@@ -286,5 +297,5 @@ fn test_fill_region_2() {
 #[test]
 fn solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 2)
-    // 5min23
+    // 5min23 -> 1min2
 }
