@@ -135,7 +135,6 @@ fn fill_iter(
     }
 
     let this_present = presents_todo[0];
-    let remaining_presents = presents_todo[1..].to_vec();
 
     let (w, h) = w_h;
     let present_size = 3; // todo hardcoded
@@ -188,12 +187,9 @@ fn fill_iter(
         .into_iter()
         .filter(fits)
         .filter_map(|new_position| {
-            let positions = present_positions
-                .iter()
-                .cloned()
-                .chain(iter::once(new_position))
-                .collect();
-            fill_iter(remaining_presents.clone(), positions, w_h, compatibility)
+            let mut positions = present_positions.to_owned();
+            positions.insert(new_position);
+            fill_iter(presents_todo[1..].to_vec(), positions, w_h, compatibility)
         })
         .next();
 
@@ -289,7 +285,7 @@ fn test_fill_region_no_solution() {
     };
     let filling = fill_region(&region, &presents);
     assert!(filling.is_none());
-    // 34s -> 4s21
+    // 34s -> 4s21 -> 3s95
 }
 
 #[test]
@@ -302,5 +298,5 @@ fn test_fill_region_2() {
 #[test]
 fn solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 2)
-    // 5min23 -> 1min2
+    // 5min23 -> 1min2 -> 1min0
 }
