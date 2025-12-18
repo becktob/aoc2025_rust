@@ -1,19 +1,19 @@
 use crate::helpers;
 use std::iter;
 
-pub type PresentShape = Vec<Vec<bool>>;
-pub type RegionMap = Vec<Vec<bool>>;
-pub struct Region {
-    pub width: usize,
-    pub height: usize,
-    pub presets_needed: Vec<usize>,
+pub(crate)  type PresentShape = Vec<Vec<bool>>;
+pub(crate)  type RegionMap = Vec<Vec<bool>>;
+pub(crate)  struct Region {
+    pub(crate)  width: usize,
+    pub(crate)  height: usize,
+    pub(crate)  presets_needed: Vec<usize>,
 }
 
-pub fn empty_region(w: usize, h: usize) -> RegionMap {
+pub(crate)  fn empty_region(w: usize, h: usize) -> RegionMap {
     iter::repeat_n(iter::repeat_n(false, w).collect(), h).collect()
 }
 
-pub fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
+pub(crate)  fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
     let (presents_raw, regions_raw) = input.rsplit_once("\n\n").unwrap();
 
     let presents = presents_raw.split("\n\n").map(parse_shape).collect();
@@ -54,7 +54,7 @@ fn parse_region(input: &str) -> Region {
     }
 }
 
-pub fn put_shape_into(
+pub(crate)  fn put_shape_into(
     region_map: &RegionMap,
     shape: &PresentShape,
     offset: (usize, usize),

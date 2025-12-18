@@ -1,4 +1,6 @@
-use crate::p12_grid::{EXAMPLE, PresentShape, Region, RegionMap, empty_region, parse, put_shape_into};
+use crate::p12_grid::{PresentShape, Region, RegionMap, empty_region, parse, put_shape_into};
+#[cfg(test)]
+use crate::p12_grid::EXAMPLE;
 use std::collections::{HashMap, HashSet};
 use std::iter;
 
@@ -200,7 +202,7 @@ fn fill_iter(
 
 #[test]
 fn test_collision_pair() {
-    let (presents, regions) = parse(EXAMPLE);
+    let (presents, _) = parse(EXAMPLE);
     let non_collisions = compatibility_pair(&presents[4], &presents[4]);
 
     // all combinations of two interlocking 'C's
