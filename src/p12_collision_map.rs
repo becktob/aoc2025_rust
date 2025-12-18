@@ -141,6 +141,12 @@ fn fill_iter(
     let w_max = w as i32 - present_size;
     let h_max = h as i32 - present_size;
 
+    // TODO IDEA:
+    //  Store locations *per type* for faster lookup,
+    // i.e. make present_postions a Vec<HashSet<PlacedPresen>>
+    // -> Faster lookup
+    // -> no need to filter when computing h_min/w_min
+
     let h_min = present_positions
         .iter()
         .filter(|p| p.n == this_present)
@@ -163,7 +169,7 @@ fn fill_iter(
                 })
             })
         })
-        .collect::<Vec<PlacedPresent>>();
+        .collect::<Vec<PlacedPresent>>();  // Todo: Why is collect() faster than chaining/inlining?
 
     let fits = |o: &PlacedPresent| -> bool {
         present_positions.iter().all(|p| {
