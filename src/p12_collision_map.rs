@@ -32,7 +32,7 @@ struct PairOrientation {
     rot_b: u8,
 }
 
-type CollisionMap = HashMap<(u8, u8), HashSet<PairOrientation>>;
+type CompatibilityMap = HashMap<(u8, u8), HashSet<PairOrientation>>;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct PlacedPresent {
@@ -69,13 +69,12 @@ fn combine_pair(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> Opti
     )
 }
 
-fn collision_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
+fn compatibility_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
     // Todo: make use of symmetries (e.g. delta > 0)
     // Todo: all_orientations could be computed one single time
-    // Todo: store non-collisions instead (inside 3x3, there are less non-c than collisions)
-    let all_orientations = (-3..=3)
+    let all_orientations = (-2..=2)
         .flat_map(|delta_i| {
-            (-3..=3).flat_map(move |delta_j| {
+            (-2..=2).flat_map(move |delta_j| {
                 (0..4).flat_map(move |rot_a| {
                     (0..4).map(move |rot_b| PairOrientation {
                         delta_i,
@@ -89,27 +88,27 @@ fn collision_pair(a: &PresentShape, b: &PresentShape) -> Vec<PairOrientation> {
         .collect::<Vec<PairOrientation>>();
     all_orientations
         .into_iter()
-        .filter(|o| pair_collides(a, b, o))
+        .filter(|o| !pair_collides(a, b, o))
         .collect()
 }
 
-fn collision_map(presents: &Vec<PresentShape>) -> CollisionMap {
+fn compatibility_map(presents: &Vec<PresentShape>) -> CompatibilityMap {
     presents
         .iter()
         .enumerate()
         .flat_map(|(m, a)| {
             presents.iter().enumerate().map(move |(n, b)| {
-                let collisions = collision_pair(a, b)
+                let compatibility = compatibility_pair(a, b)
                     .into_iter()
                     .collect::<HashSet<PairOrientation>>();
-                ((m as u8, n as u8), collisions)
+                ((m as u8, n as u8), compatibility)
             })
         })
         .collect()
 }
 
 fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<HashSet<PlacedPresent>> {
-    let collisions = collision_map(shapes);
+    let compatibility = compatibility_map(shapes);
     let shapes_todo = region
         .presets_needed
         .iter()
@@ -117,14 +116,14 @@ fn fill_region(region: &Region, shapes: &Vec<PresentShape>) -> Option<HashSet<Pl
         .flat_map(|(&times_needed, shape_no)| iter::repeat_n(shape_no, times_needed))
         .collect();
     let w_h = (region.width, region.height);
-    fill_iter(shapes_todo, HashSet::new(), w_h, &collisions)
+    fill_iter(shapes_todo, HashSet::new(), w_h, &compatibility)
 }
 
 fn fill_iter(
     presents_todo: Vec<u8>,
     present_positions: HashSet<PlacedPresent>,
     w_h: (usize, usize),
-    collisions: &CollisionMap,
+    compatibility: &CompatibilityMap,
 ) -> Option<HashSet<PlacedPresent>> {
     if presents_todo.is_empty() {
         return Some(present_positions);
@@ -152,10 +151,10 @@ fn fill_iter(
         .collect::<Vec<PlacedPresent>>();
 
     let fits = |o: &PlacedPresent| -> bool {
-        !present_positions.iter().any(|p| {
+        present_positions.iter().all(|p| {
             let delta_i = p.i - o.i;
             let delta_j = p.j - o.j;
-            if delta_i >= present_size || delta_j >= present_size {
+            if delta_i.abs() >= present_size || delta_j.abs() >= present_size {
                 return true;
             }
 
@@ -165,7 +164,7 @@ fn fill_iter(
                 rot_a: o.rot,
                 rot_b: p.rot,
             };
-            collisions.get(&(o.n, p.n)).unwrap().contains(&pair)
+            compatibility.get(&(o.n, p.n)).unwrap().contains(&pair)
         })
     };
 
@@ -178,7 +177,7 @@ fn fill_iter(
                 .cloned()
                 .chain(iter::once(new_position))
                 .collect();
-            fill_iter(remaining_presents.clone(), positions, w_h, collisions)
+            fill_iter(remaining_presents.clone(), positions, w_h, compatibility)
         })
         .next();
 
@@ -188,13 +187,7 @@ fn fill_iter(
 #[test]
 fn test_collision_pair() {
     let (presents, regions) = parse(EXAMPLE);
-    let collisions = collision_pair(&presents[4], &presents[4]);
-
-    let non_collisions = massive_block_collisions()
-        .into_iter()
-        .filter(|c| !collisions.contains(c))
-        .collect::<Vec<_>>();
-    non_collisions.iter().for_each(|p| println!("{:?}", p));
+    let non_collisions = compatibility_pair(&presents[4], &presents[4]);
 
     // all combinations of two interlocking 'C's
     // 4 rot_a
@@ -202,20 +195,13 @@ fn test_collision_pair() {
     // *2 interlock by 1 or by 2
 
     assert_eq!(non_collisions.len(), 4 * 2 * 2);
-    assert_eq!(collisions.len(), 384)
 }
 
 #[test]
 fn test_collision_pair_massive_block() {
-    let collisions = massive_block_collisions();
-    assert_eq!(collisions.len(), 25 * 4 * 4);
-}
-
-#[cfg(test)]
-fn massive_block_collisions() -> Vec<PairOrientation> {
     let block = iter::repeat_n(iter::repeat_n(true, 3).collect(), 3).collect();
-    let collisions = collision_pair(&block, &block);
-    collisions
+    let compatibility = compatibility_pair(&block, &block);
+    assert_eq!(compatibility.len(), 0);
 }
 
 #[test]
@@ -234,17 +220,17 @@ fn test_collides_exploratory() {
 #[test]
 fn test_collision_map() {
     let (presents, _) = parse(EXAMPLE);
-    let map = collision_map(&presents);
+    let map = compatibility_map(&presents);
     assert_eq!(map.len(), presents.len() * presents.len());
 
     let collisions_4_4 = map.get(&(4, 4)).unwrap();
-    assert_eq!(collisions_4_4.len(), 384); // see test_collision_pair()
+    assert_eq!(collisions_4_4.len(), 16); // see test_collision_pair()
 }
 
 #[test]
 fn test_fill_iter_puts_one_present() {
     let (presents, _) = parse(EXAMPLE);
-    let collisions = collision_map(&presents);
+    let collisions = compatibility_map(&presents);
     let presents_todo = vec![4];
     let filling = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
 
@@ -254,7 +240,7 @@ fn test_fill_iter_puts_one_present() {
 #[test]
 fn test_fill_iter_cant_put_two_presents() {
     let (presents, _) = parse(EXAMPLE);
-    let collisions = collision_map(&presents);
+    let collisions = compatibility_map(&presents);
     let presents_todo = vec![4, 4];
     let filling = fill_iter(presents_todo, HashSet::new(), (3, 3), &collisions);
 
@@ -264,7 +250,7 @@ fn test_fill_iter_cant_put_two_presents() {
 #[test]
 fn test_fill_iter_can_put_two_presents_in_4_by_4() {
     let (presents, _) = parse(EXAMPLE);
-    let collisions = collision_map(&presents);
+    let collisions = compatibility_map(&presents);
     let presents_todo = vec![4, 4];
     let fillings = fill_iter(presents_todo, HashSet::new(), (4, 4), &collisions);
 
@@ -278,6 +264,19 @@ fn test_fill_region() {
 }
 
 #[test]
+fn test_fill_region_no_solution() {
+    let (presents, _) = parse(EXAMPLE);
+    let region = Region {
+        width: 4,
+        height: 12, // 6 fit into 12x4
+        presets_needed: vec![0, 0, 0, 0, 7, 0],
+    };
+    let filling = fill_region(&region, &presents);
+    assert!(filling.is_none());
+    // 34s
+}
+
+#[test]
 fn test_fill_region_2() {
     let (presents, regions) = parse(EXAMPLE);
     let filling = fill_region(&regions[1], &presents);
@@ -287,4 +286,5 @@ fn test_fill_region_2() {
 #[test]
 fn solve_1_example() {
     assert_eq!(solve_1(EXAMPLE), 2)
+    // 5min23
 }
