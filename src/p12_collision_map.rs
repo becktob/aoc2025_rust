@@ -49,14 +49,17 @@ fn pair_collides(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> boo
 
 fn combine_pair(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> Option<RegionMap> {
     // todo: less cloning
-    let (i_a, j_a) = (4, 4);
-    let (i_b, j_b) = (i_a + o.delta_i, j_a + o.delta_j);
+    let (i_a, j_a) = (2usize, 2usize);
+    let (i_b, j_b) = (
+        i_a.checked_add_signed(o.delta_i as isize).unwrap(),
+        j_a.checked_add_signed(o.delta_j as isize).unwrap(),
+    );
 
-    let empty_region = empty_region(9, 9);
+    let empty_region = empty_region(5, 5);
     let region_with_a = put_shape_into(
         &empty_region,
         &a,
-        (i_a as usize, j_a as usize),
+        (i_a, j_a),
         o.rot_a as usize,
     )
     .unwrap(); // todo: lots of cloning in here
@@ -64,7 +67,7 @@ fn combine_pair(a: &PresentShape, b: &PresentShape, o: &PairOrientation) -> Opti
     put_shape_into(
         &region_with_a,
         &b,
-        (i_b as usize, j_b as usize),
+        (i_b, j_b),
         o.rot_b as usize,
     )
 }
