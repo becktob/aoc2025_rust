@@ -29,6 +29,13 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
     if machine.matrix_buttons.len() == 1 {
         return machine.to_owned();
     }
+    if machine
+        .matrix_buttons
+        .iter()
+        .all(|row| row.iter().all(|el| *el == 0))
+    {
+        return machine.to_owned();
+    }
 
     let matrix = machine.matrix_buttons.to_owned();
     let vector = machine.vector_jolts.to_owned();
@@ -39,12 +46,19 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
                 .iter()
                 .enumerate()
                 .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
+                .unwrap_or(usize::MAX)
         })
-        .unwrap_or(usize::MAX);
+        .unwrap();
 
     // move this to top
     let top_row = matrix[i_row_with_leftmost_entry].to_owned();
     let top_vec = vector[i_row_with_leftmost_entry];
+
+    let j_piv = top_row
+        .iter()
+        .enumerate()
+        .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
+        .unwrap();
 
     let mut rem_vec = vector
         .iter()
@@ -64,7 +78,13 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
 
     let rowwise_factors = rem_matrix
         .iter()
-        .map(|row| if row[0] == 0 { 0 } else { top_row[0] / row[0] })
+        .map(|row| {
+            if row[j_piv] == 0 {
+                0
+            } else {
+                top_row[j_piv] / row[j_piv]
+            }
+        })
         .collect::<Vec<_>>();
 
     // subtract first row from remaining rows
@@ -99,7 +119,6 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
             .collect(),
     }
 }
-
 #[test]
 fn test_convert_machine() {
     let machines = parse_machines(crate::p10::EXAMPLE);
@@ -130,7 +149,7 @@ fn test_row_echelon_2by2() {
 }
 
 #[test]
-fn test_row_echelon_example() {
+fn test_row_echelon_example_0() {
     let machines = parse_machines(crate::p10::EXAMPLE);
     let machine = convert_machine(&machines[0]);
     let row_ech = row_echelon(&machine);
@@ -145,4 +164,35 @@ fn test_row_echelon_example() {
         ]
     );
     assert_eq!(row_ech.vector_jolts, vec![7, 5, 4, 3,])
+}
+
+#[test]
+fn test_row_echelon_example_2() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[2]);
+    assert_eq!(
+        machine.matrix_buttons,
+        vec![
+            vec![1, 1, 1, 0],
+            vec![1, 0, 1, 1],
+            vec![1, 0, 1, 1],
+            vec![1, 1, 0, 0],
+            vec![1, 1, 1, 0],
+            vec![0, 0, 1, 0],
+        ]
+    );
+    let row_ech = row_echelon(&machine);
+    // This one only needs to be sorted differently
+    assert_eq!(
+        row_ech.matrix_buttons,
+        vec![
+            vec![1, 1, 1, 0],
+            vec![0, -1, 0, 1],
+            vec![0, 0, -1, 0],
+            vec![0, 0, 0, 0],
+            vec![0, 0, 0, 0],
+            vec![0, 0, 0, 0]
+        ]
+    );
+    assert_eq!(row_ech.vector_jolts, vec![10, 1, -5, 0, 0, 0]) // not verified, three zeros are plausible.
 }
