@@ -15,6 +15,7 @@ mod p12_grid;
 mod p12_collision_map;
 mod helpers;
 mod p12_explore;
+mod p12;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
@@ -30,7 +31,7 @@ fn main() {
         ("09", p09::solve as SolveFunc),
         ("10", p10::solve as SolveFunc),
         ("11", p11::solve as SolveFunc),
-        ("12", p12_collision_map::solve as SolveFunc),
+        ("12", p12::solve as SolveFunc),
     ]);
 
     for (name, func) in modules {

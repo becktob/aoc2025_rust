@@ -4,16 +4,6 @@ use crate::p12_grid::EXAMPLE;
 use std::collections::{HashMap, HashSet};
 use std::iter;
 
-pub fn solve(part2: bool) -> String {
-    let input = std::fs::read_to_string("input_12.txt").expect("could not read file");
-    if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
-    } else {
-        solve_1(&input).to_string()
-    }
-}
-
 // Idea: Do all pairwise colliding once (including scanning, rotating...)
 // -> Search in large region is simpler and hashable
 
