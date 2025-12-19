@@ -1,8 +1,7 @@
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_12.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        "... does not exist, solve other parts ...".to_string()
     } else {
         solve_1(&input).to_string()
     }
