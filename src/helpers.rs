@@ -12,6 +12,7 @@ pub fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
         .collect()
 }
 
+#[cfg(test)]
 pub fn rot90<T: Clone>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     let rows = v.len();
     let cols = v[0].len();
