@@ -49,7 +49,7 @@ pub(crate) struct Machine {
     pub(crate) joltage: Vec<i32>,
 }
 
-type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
+pub(crate) type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
 fn configure_machine(machine: &Machine) -> ButtonPresses {
     let n_buttons = machine.buttons.len();
@@ -165,7 +165,7 @@ fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<u32> {
     )
 }
 
-fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
+pub(crate) fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
     // todo: return Impl Iterator here?
 
     if positions == 1 {

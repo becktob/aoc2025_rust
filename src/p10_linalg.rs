@@ -1,4 +1,4 @@
-use crate::p10::{Machine, parse_machines};
+use crate::p10::{all_sequences, parse_machines, ButtonPresses, Machine};
 use std::iter;
 
 #[derive(Debug, Clone)]
@@ -143,6 +143,33 @@ fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
         vector_jolts: vec,
     }
 }
+
+fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
+    // Todo: recursion
+    let max_n_presses = *machine.vector_jolts.iter().max().unwrap(); // Todo: not correct if matrix has negative coefficients, use original machine's joltages
+
+    let i_this_row = machine.matrix_buttons.len() - 1;
+    let this_row = machine.matrix_buttons[i_this_row].to_owned();
+    let this_joltage = machine.vector_jolts[i_this_row];
+    let n_buttons_this_row = machine.matrix_buttons[i_this_row]
+        .iter()
+        .filter(|&el| *el != 0)
+        .count();
+
+    (0..=max_n_presses)
+        .flat_map(|n_presses| all_sequences(n_buttons_this_row, n_presses as usize))
+        .into_iter()
+        .filter(|presses| {
+            presses
+                .iter()
+                .zip(this_row.iter())
+                .map(|(&p, &el)| p as i32 * el)
+                .sum::<i32>()
+                == this_joltage
+        })
+        .collect()
+}
+
 #[test]
 fn test_convert_machine() {
     let machines = parse_machines(crate::p10::EXAMPLE);
@@ -229,4 +256,17 @@ fn test_trim_zero_rows() {
     let trimmed_machine = trim_zero_rows(&row_ech);
     assert_eq!(trimmed_machine.matrix_buttons.len(), 3);
     assert_eq!(trimmed_machine.vector_jolts.len(), 3);
+}
+
+#[test]
+fn test_solutions_tiny_machine() {
+    let machine = MatrixMachine {
+        matrix_buttons: vec![vec![1, 2]],
+        vector_jolts: vec![7],
+    };
+    assert_eq!(
+        solutions(machine),
+        // implementation might change order
+        vec![vec![1, 3], vec![3, 2], vec![5, 1], vec![7, 0,]]
+    );
 }
