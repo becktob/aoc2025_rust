@@ -119,6 +119,30 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
             .collect(),
     }
 }
+
+fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
+    let matrix = machine
+        .matrix_buttons
+        .iter()
+        .take_while(|row| row.iter().any(|el| *el != 0))
+        .cloned()
+        .collect::<Vec<_>>();
+    let n_keep = matrix.len();
+
+    assert!(machine.vector_jolts.iter().skip(n_keep).all(|el| *el == 0));
+
+    let vec = machine
+        .vector_jolts
+        .iter()
+        .take(n_keep)
+        .cloned()
+        .collect::<Vec<_>>();
+
+    MatrixMachine {
+        matrix_buttons: matrix,
+        vector_jolts: vec,
+    }
+}
 #[test]
 fn test_convert_machine() {
     let machines = parse_machines(crate::p10::EXAMPLE);
@@ -195,4 +219,14 @@ fn test_row_echelon_example_2() {
         ]
     );
     assert_eq!(row_ech.vector_jolts, vec![10, 1, -5, 0, 0, 0]) // not verified, three zeros are plausible.
+}
+
+#[test]
+fn test_trim_zero_rows() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[2]);
+    let row_ech = row_echelon(&machine);
+    let trimmed_machine = trim_zero_rows(&row_ech);
+    assert_eq!(trimmed_machine.matrix_buttons.len(), 3);
+    assert_eq!(trimmed_machine.vector_jolts.len(), 3);
 }
