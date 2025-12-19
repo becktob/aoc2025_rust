@@ -1,9 +1,9 @@
-use crate::p12_grid::{PresentShape, Region, RegionMap, empty_region, parse, put_shape_into};
+use crate::p12_grid::{empty_region, put_shape_into, RegionMap};
 #[cfg(test)]
-use crate::p12_grid::EXAMPLE;
+use crate::p12::EXAMPLE;
 use std::collections::{HashMap, HashSet};
 use std::iter;
-
+use crate::p12::{parse, PresentShape, Region};
 // Idea: Do all pairwise colliding once (including scanning, rotating...)
 // -> Search in large region is simpler and hashable
 

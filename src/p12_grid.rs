@@ -1,57 +1,13 @@
-use crate::helpers;
+use crate::{helpers, p12};
 use std::iter;
+use crate::p12::PresentShape;
+#[cfg(test)]
+use crate::p12::EXAMPLE;
 
-pub(crate)  type PresentShape = Vec<Vec<bool>>;
 pub(crate)  type RegionMap = Vec<Vec<bool>>;
-pub(crate)  struct Region {
-    pub(crate)  width: usize,
-    pub(crate)  height: usize,
-    pub(crate)  presets_needed: Vec<usize>,
-}
 
 pub(crate)  fn empty_region(w: usize, h: usize) -> RegionMap {
     iter::repeat_n(iter::repeat_n(false, w).collect(), h).collect()
-}
-
-pub(crate)  fn parse(input: &str) -> (Vec<PresentShape>, Vec<Region>) {
-    let (presents_raw, regions_raw) = input.rsplit_once("\n\n").unwrap();
-
-    let presents = presents_raw.split("\n\n").map(parse_shape).collect();
-    let regions = regions_raw.lines().map(parse_region).collect();
-
-    (presents, regions)
-}
-
-fn parse_shape(input: &str) -> PresentShape {
-    input
-        .split_once(':')
-        .unwrap()
-        .1
-        .trim()
-        .lines()
-        .map(|line| line.chars().map(|c| c == '#').collect())
-        .collect()
-}
-
-fn parse_region(input: &str) -> Region {
-    let (wh_raw, presents_raw) = input.split_once(':').unwrap();
-    let wh = wh_raw
-        .split('x')
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect::<Vec<_>>();
-    let (width, height) = (wh[0], wh[1]);
-    let presets_needed = presents_raw
-        .trim()
-        .split_whitespace()
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect();
-    Region {
-        width,
-        height,
-        presets_needed,
-    }
 }
 
 pub(crate)  fn put_shape_into(
@@ -93,52 +49,9 @@ pub(crate)  fn put_shape_into(
     }
 }
 
-#[cfg(test)]
-pub(crate) static EXAMPLE: &str = "0:
-###
-##.
-##.
-
-1:
-###
-##.
-.##
-
-2:
-.##
-###
-##.
-
-3:
-##.
-###
-##.
-
-4:
-###
-#..
-###
-
-5:
-###
-.#.
-###
-
-4x4: 0 0 0 0 2 0
-12x5: 1 0 1 0 2 2
-12x5: 1 0 1 0 3 2
-";
-
-#[test]
-fn test_parse() {
-    let (presents, regions) = parse(EXAMPLE);
-    assert_eq!(presents.len(), 6);
-    assert_eq!(regions.len(), 3);
-}
-
 #[test]
 fn test_put_shape_into_empty() {
-    let (presents, _) = parse(EXAMPLE);
+    let (presents, _) = p12::parse(EXAMPLE);
     let empty_region = empty_region(4, 4);
     let region_with_piece = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
     assert!(region_with_piece.is_some());
@@ -146,7 +59,7 @@ fn test_put_shape_into_empty() {
 
 #[test]
 fn test_put_shape_into_not_twice() {
-    let (presents, _) = parse(EXAMPLE);
+    let (presents, _) = p12::parse(EXAMPLE);
     let empty_region = empty_region(4, 4);
     assert_eq!(empty_region[0][0], false);
     let region_with_first = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
@@ -159,7 +72,7 @@ fn test_put_shape_into_not_twice() {
 
 #[test]
 fn test_put_shape_into_rotated() {
-    let (presents, _) = parse(EXAMPLE);
+    let (presents, _) = p12::parse(EXAMPLE);
     let empty_region = empty_region(4, 4);
     let region_with_first = put_shape_into(&empty_region, &presents[4], (0, 0), 0);
     assert!(region_with_first.is_some());

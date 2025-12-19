@@ -11,11 +11,11 @@ mod p08;
 mod p09;
 mod p10;
 mod p11;
-mod p12_grid;
-mod p12_collision_map;
-mod helpers;
-mod p12_explore;
 mod p12;
+//mod p12_grid;
+//mod p12_collision_map;
+mod helpers;
+
 
 fn main() {
     type SolveFunc = fn(bool) -> String;
