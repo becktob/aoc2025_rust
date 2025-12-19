@@ -38,7 +38,7 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
             matrix[*i]
                 .iter()
                 .enumerate()
-                .find_map(|(j, &val)| if val == 0 { Some(j) } else { None })
+                .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
         })
         .unwrap_or(usize::MAX);
 
@@ -64,7 +64,7 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
 
     let rowwise_factors = rem_matrix
         .iter()
-        .map(|row| top_row[0] / row[0])
+        .map(|row| if row[0] == 0 { 0 } else { top_row[0] / row[0] })
         .collect::<Vec<_>>();
 
     // subtract first row from remaining rows
@@ -127,4 +127,22 @@ fn test_row_echelon_2by2() {
     let row_ech = row_echelon(&machine);
     assert_eq!(row_ech.matrix_buttons, vec![vec![1, 2,], vec![0, -1,],]);
     assert_eq!(row_ech.vector_jolts, vec![2, 3])
+}
+
+#[test]
+fn test_row_echelon_example() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[0]);
+    let row_ech = row_echelon(&machine);
+    // This one only needs to be sorted differently
+    assert_eq!(
+        row_ech.matrix_buttons,
+        vec![
+            vec![1, 1, 0, 1, 0, 0,],
+            vec![0, 1, 0, 0, 0, 1,],
+            vec![0, 0, 1, 1, 1, 0,],
+            vec![0, 0, 0, 0, 1, 1,],
+        ]
+    );
+    assert_eq!(row_ech.vector_jolts, vec![7, 5, 4, 3,])
 }
