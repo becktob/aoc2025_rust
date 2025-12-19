@@ -15,7 +15,7 @@ mod p12;
 //mod p12_grid;
 //mod p12_collision_map;
 mod helpers;
-
+mod p10_linalg;
 
 fn main() {
     type SolveFunc = fn(bool) -> String;

@@ -43,10 +43,10 @@ fn solve_2(input: &str) -> usize {
 }
 
 #[derive(Debug, Clone)]
-struct Machine {
+pub(crate) struct Machine {
     goal: Vec<bool>,
-    buttons: Vec<Vec<usize>>,
-    joltage: Vec<i32>,
+    pub(crate) buttons: Vec<Vec<usize>>,
+    pub(crate) joltage: Vec<i32>,
 }
 
 type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
@@ -210,7 +210,7 @@ fn sort_machine(machine: &Machine) -> Machine {
     }
 }
 
-fn parse_machines(input: &str) -> Vec<Machine> {
+pub(crate) fn parse_machines(input: &str) -> Vec<Machine> {
     input.lines().map(parse_machine).collect()
 }
 
@@ -244,7 +244,7 @@ where
 }
 
 #[cfg(test)]
-static EXAMPLE: &str = "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+pub(crate) static EXAMPLE: &str = "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
 [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
 ";
