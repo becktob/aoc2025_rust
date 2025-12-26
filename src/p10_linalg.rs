@@ -60,21 +60,11 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
         .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
         .unwrap();
 
-    let mut rem_vec = vector
-        .iter()
-        .cloned()
-        .enumerate()
-        .filter(|(i, _)| *i != i_row_with_leftmost_entry)
-        .map(|(i, val)| val)
-        .collect::<Vec<_>>();
+    let mut rem_vec = vector.clone();
+    rem_vec.remove(i_row_with_leftmost_entry);
 
-    let mut rem_matrix = matrix
-        .iter()
-        .cloned()
-        .enumerate()
-        .filter(|(i, _)| *i != i_row_with_leftmost_entry)
-        .map(|(i, val)| val)
-        .collect::<Vec<_>>();
+    let mut rem_matrix = matrix.clone();
+    rem_matrix.remove(i_row_with_leftmost_entry);
 
     let rowwise_factors = rem_matrix
         .iter()
