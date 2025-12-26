@@ -1,6 +1,16 @@
 use crate::p10::{ButtonPresses, Machine, all_sequences, parse_machines};
 use std::iter;
 
+fn configure_machine(machine: MatrixMachine) -> usize {
+    let machine_echelon = row_echelon(&machine);
+    let solutions = solutions(machine_echelon);
+    let minimal_solution = solutions
+        .iter()
+        .min_by_key(|&presses| presses.iter().sum::<usize>())
+        .unwrap();
+    minimal_solution.iter().sum()
+}
+
 #[derive(Debug, Clone)]
 struct MatrixMachine {
     matrix_buttons: Vec<Vec<i32>>,
@@ -207,7 +217,6 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
                 matrix_buttons: rem_matrix.clone(),
                 vector_jolts: rem_jolts,
             };
-            println!("{:?} -> {:?}", presses, remaining_machine);
             solutions(remaining_machine)
                 .into_iter()
                 .map(|rem_solution| {
@@ -361,4 +370,10 @@ fn test_known_solution() {
     let known_solution = vec![1, 3, 0, 3, 1, 2];
     let solutions = solutions(machine);
     assert!(solutions.contains(&known_solution));
+}
+#[test]
+fn test_configure_machine() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[0]);
+    assert_eq!(10, configure_machine(machine))
 }
