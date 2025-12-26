@@ -145,7 +145,6 @@ fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
 }
 
 fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
-    // Todo: recursion
     let max_n_presses = *machine.vector_jolts.iter().max().unwrap(); // Todo: not correct if matrix has negative coefficients, use original machine's joltages
 
     let i_this_row = machine.matrix_buttons.len() - 1;
