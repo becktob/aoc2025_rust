@@ -153,8 +153,6 @@ fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
 }
 
 fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
-    let machine = trim_zero_rows(&machine);
-
     let max_n_presses = *machine.vector_jolts.iter().max().unwrap(); // Todo: not correct if matrix has negative coefficients, use original machine's joltages
 
     let i_this_row = machine.matrix_buttons.len() - 1;
@@ -164,6 +162,17 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
         .iter()
         .filter(|&el| *el != 0)
         .collect::<Vec<_>>();
+
+    if nonzero_this_row.len() == 0 && this_joltage != 0 {
+        return vec![];
+    }
+    if nonzero_this_row.len() == 0 && this_joltage == 0 {
+        let trimmed_machine = MatrixMachine {
+            matrix_buttons: machine.matrix_buttons[0..i_this_row].to_vec(),
+            vector_jolts: machine.vector_jolts[0..i_this_row].to_owned(),
+        };
+        return solutions(trimmed_machine);
+    }
 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
@@ -404,5 +413,13 @@ fn test_solve_2_time() {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     let machines = parse_machines(&input);
     let machine = convert_machine(&machines[23]);
-    assert_eq!(86, configure_machine(machine));
+    assert_eq!(86, configure_machine(machine)); // unconfirmed
+}
+
+#[test]
+fn test_solve_2_0() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[0]);
+    assert_eq!(98, configure_machine(machine));  // unconfirmed
 }
