@@ -1,4 +1,4 @@
-use crate::p10::{all_sequences, parse_machines, ButtonPresses, Machine};
+use crate::p10::{ButtonPresses, Machine, all_sequences, parse_machines};
 use std::iter;
 
 #[derive(Debug, Clone)]
@@ -156,17 +156,18 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
         .filter(|&el| *el != 0)
         .count();
 
+    let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
+        presses
+            .iter()
+            .zip(this_row.iter())
+            .map(|(&p, &el)| p as i32 * el)
+            .sum::<i32>()
+            == this_joltage
+    };
     (0..=max_n_presses)
         .flat_map(|n_presses| all_sequences(n_buttons_this_row, n_presses as usize))
         .into_iter()
-        .filter(|presses| {
-            presses
-                .iter()
-                .zip(this_row.iter())
-                .map(|(&p, &el)| p as i32 * el)
-                .sum::<i32>()
-                == this_joltage
-        })
+        .filter(presses_add_up_to_this_joltage)
         .collect()
 }
 
