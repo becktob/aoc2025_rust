@@ -351,3 +351,14 @@ fn test_solutions_three_button_machine() {
         vec![vec![6, 3, 0,], vec![7, 2, 1], vec![8, 1, 2], vec![9, 0, 3],]
     );
 }
+
+#[test]
+fn test_known_solution() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[0]);
+    let machine = row_echelon(&machine);
+
+    let known_solution = vec![1, 3, 0, 3, 1, 2];
+    let solutions = solutions(machine);
+    assert!(solutions.contains(&known_solution));
+}
