@@ -398,3 +398,11 @@ fn test_configure_machine_2() {
 fn solve_2_example() {
     assert_eq!(solve_2(EXAMPLE), 33);
 }
+
+#[test]
+fn test_solve_2_time() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[23]);
+    assert_eq!(86, configure_machine(machine));
+}
