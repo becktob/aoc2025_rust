@@ -1,5 +1,13 @@
-use crate::p10::{ButtonPresses, Machine, all_sequences, parse_machines};
+use crate::p10::{ButtonPresses, EXAMPLE, Machine, all_sequences, parse_machines};
 use std::iter;
+
+fn solve_2(input: &str) -> usize {
+    parse_machines(input)
+        .iter()
+        .map(convert_machine)
+        .map(configure_machine)
+        .sum()
+}
 
 fn configure_machine(machine: MatrixMachine) -> usize {
     let machine_echelon = row_echelon(&machine);
@@ -145,6 +153,8 @@ fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
 }
 
 fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
+    let machine = trim_zero_rows(&machine);
+
     let max_n_presses = *machine.vector_jolts.iter().max().unwrap(); // Todo: not correct if matrix has negative coefficients, use original machine's joltages
 
     let i_this_row = machine.matrix_buttons.len() - 1;
@@ -371,8 +381,20 @@ fn test_known_solution() {
     assert!(solutions.contains(&known_solution));
 }
 #[test]
-fn test_configure_machine() {
+fn test_configure_machine_0() {
     let machines = parse_machines(crate::p10::EXAMPLE);
     let machine = convert_machine(&machines[0]);
     assert_eq!(10, configure_machine(machine))
+}
+
+#[test]
+fn test_configure_machine_2() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[1]);
+    assert_eq!(12, configure_machine(machine))
+}
+
+#[test]
+fn solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 33);
 }
