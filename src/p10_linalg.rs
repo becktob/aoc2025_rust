@@ -45,7 +45,18 @@ fn convert_machine(machine: &Machine) -> MatrixMachine {
 
 fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
     if machine.matrix_buttons.len() == 1 {
-        return machine.to_owned();
+        // make sure joltages are positive
+        let signum = machine.vector_jolts[0].signum();
+        let matrix_buttons = machine
+            .matrix_buttons
+            .iter()
+            .map(|row| row.iter().map(|el|el * signum).collect())
+            .collect();
+        let vector_jolts = machine.vector_jolts.iter().map(|&el| el * signum).collect();
+        return MatrixMachine {
+            matrix_buttons,
+            vector_jolts,
+        };
     }
     if machine
         .matrix_buttons
@@ -77,6 +88,13 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
         .enumerate()
         .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
         .unwrap();
+
+    // make sure joltages are positive
+    let top_row = top_row
+        .iter()
+        .map(|&val| val * top_vec.signum())
+        .collect::<Vec<_>>();
+    let top_vec = top_vec * top_vec.signum();
 
     let mut rem_vec = vector.clone();
     rem_vec.remove(i_row_with_leftmost_entry);
@@ -325,13 +343,13 @@ fn test_row_echelon_example_2() {
         vec![
             vec![1, 1, 1, 0],
             vec![0, -1, 0, 1],
-            vec![0, 0, -1, 0],
+            vec![0, 0, 1, 0],
             vec![0, 0, 0, 0],
             vec![0, 0, 0, 0],
             vec![0, 0, 0, 0]
         ]
     );
-    assert_eq!(row_ech.vector_jolts, vec![10, 1, -5, 0, 0, 0]) // not verified, three zeros are plausible.
+    assert_eq!(row_ech.vector_jolts, vec![10, 1, 5, 0, 0, 0]) // not verified, three zeros are plausible.
 }
 
 #[test]
