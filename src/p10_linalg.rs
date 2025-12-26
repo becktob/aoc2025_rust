@@ -141,21 +141,21 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
     let i_this_row = machine.matrix_buttons.len() - 1;
     let this_row = machine.matrix_buttons[i_this_row].to_owned();
     let this_joltage = machine.vector_jolts[i_this_row];
-    let n_buttons_this_row = machine.matrix_buttons[i_this_row]
+    let nonzero_this_row = machine.matrix_buttons[i_this_row]
         .iter()
         .filter(|&el| *el != 0)
-        .count();
+        .collect::<Vec<_>>();
 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
             .iter()
-            .zip(this_row.iter())
+            .zip(nonzero_this_row.iter())
             .map(|(&p, &el)| p as i32 * el)
             .sum::<i32>()
             == this_joltage
     };
     (0..=max_n_presses)
-        .flat_map(|n_presses| all_sequences(n_buttons_this_row, n_presses as usize))
+        .flat_map(|n_presses| all_sequences(nonzero_this_row.len(), n_presses as usize))
         .into_iter()
         .filter(presses_add_up_to_this_joltage)
         .collect()
@@ -250,7 +250,7 @@ fn test_trim_zero_rows() {
 }
 
 #[test]
-fn test_solutions_tiny_machine() {
+fn test_solutions_two_button_machine() {
     let machine = MatrixMachine {
         matrix_buttons: vec![vec![1, 2]],
         vector_jolts: vec![7],
