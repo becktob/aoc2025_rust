@@ -149,15 +149,83 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
             .iter()
-            .zip(nonzero_this_row.iter())
+            .zip(this_row.iter())
             .map(|(&p, &el)| p as i32 * el)
             .sum::<i32>()
             == this_joltage
     };
-    (0..=max_n_presses)
+    let presses_this_row = (0..=max_n_presses)
         .flat_map(|n_presses| all_sequences(nonzero_this_row.len(), n_presses as usize))
+        .map(|nonzero_presses| {
+            // expand with zeros to row length
+            let mut iter = nonzero_presses.into_iter();
+            machine.matrix_buttons[i_this_row]
+                .iter()
+                .map(|&el| if el == 0 { 0 } else { iter.next().unwrap() })
+                .collect()
+        })
         .into_iter()
         .filter(presses_add_up_to_this_joltage)
+        .collect::<Vec<_>>();
+
+    if i_this_row == 0 {
+        return presses_this_row;
+    }
+
+    let mut temp_matrix = machine.matrix_buttons.clone();
+    temp_matrix.remove(i_this_row);
+    let rem_matrix = temp_matrix
+        .iter()
+        .map(|row| {
+            // remove columns solved by this row's buttons
+            row.iter()
+                .zip(this_row.iter())
+                .filter_map(|(&el, &this)| if this == 0 { Some(el) } else { None })
+                .collect()
+        })
+        .collect::<Vec<_>>();
+
+    presses_this_row
+        .iter()
+        .flat_map(|presses| {
+            let mut rem_jolts = machine.vector_jolts.clone();
+            rem_jolts.remove(i_this_row);
+
+            let jolts_this_press = machine.matrix_buttons.iter().map(|row| {
+                row.iter()
+                    .zip(presses.iter())
+                    .map(|(&m, &p)| m * p as i32)
+                    .sum::<i32>()
+            });
+
+            rem_jolts
+                .iter_mut()
+                .zip(jolts_this_press)
+                .for_each(|(j, p)| *j -= p);
+
+            let remaining_machine = MatrixMachine {
+                matrix_buttons: rem_matrix.clone(),
+                vector_jolts: rem_jolts,
+            };
+            println!("{:?} -> {:?}", presses, remaining_machine);
+            solutions(remaining_machine)
+                .into_iter()
+                .map(|rem_solution| {
+                    //rem_solution.iter().chain(presses.iter()).cloned().collect())
+                    let mut rem_iter = rem_solution.into_iter();
+                    presses
+                        .iter()
+                        .zip(this_row.iter())
+                        .map(|(&this_press, &el)| {
+                            if el != 0 {
+                                this_press
+                            } else {
+                                rem_iter.next().unwrap()
+                            }
+                        })
+                        .collect()
+                })
+        })
         .collect()
 }
 
@@ -250,6 +318,15 @@ fn test_trim_zero_rows() {
 }
 
 #[test]
+fn test_solutions_one_button_machine() {
+    let machine = MatrixMachine {
+        matrix_buttons: vec![vec![1]],
+        vector_jolts: vec![7],
+    };
+    assert_eq!(solutions(machine), vec![vec![7],]);
+}
+
+#[test]
 fn test_solutions_two_button_machine() {
     let machine = MatrixMachine {
         matrix_buttons: vec![vec![1, 2]],
@@ -259,5 +336,18 @@ fn test_solutions_two_button_machine() {
         solutions(machine),
         // implementation might change order
         vec![vec![1, 3], vec![3, 2], vec![5, 1], vec![7, 0,]]
+    );
+}
+
+#[test]
+fn test_solutions_three_button_machine() {
+    let machine = MatrixMachine {
+        matrix_buttons: vec![vec![1, 1, 0], vec![0, 1, 1]],
+        vector_jolts: vec![9, 3],
+    };
+    assert_eq!(
+        solutions(machine),
+        // implementation might change order
+        vec![vec![6, 3, 0,], vec![7, 2, 1], vec![8, 1, 2], vec![9, 0, 3],]
     );
 }
