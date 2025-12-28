@@ -1,11 +1,18 @@
-use crate::p10::{ButtonPresses, EXAMPLE, Machine, all_sequences, parse_machines};
+#[cfg(test)]
+use crate::p10::EXAMPLE;
+use crate::p10::{ButtonPresses, Machine, all_sequences, parse_machines};
 use std::iter;
 
-fn solve_2(input: &str) -> usize {
+pub(crate) fn solve_2(input: &str) -> usize {
     parse_machines(input)
         .iter()
         .map(convert_machine)
         .map(configure_machine)
+        .enumerate()
+        .map(|(i, solution)| {
+            println!("{}: {}", i, solution);
+            solution
+        })
         .sum()
 }
 
@@ -191,6 +198,8 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
         };
         return solutions(trimmed_machine);
     }
+    
+    println!("{:?} -> {:?} ({:?})", this_row, this_joltage, max_n_presses);
 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
@@ -439,5 +448,15 @@ fn test_solve_2_0() {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     let machines = parse_machines(&input);
     let machine = convert_machine(&machines[0]);
-    assert_eq!(98, configure_machine(machine));  // unconfirmed
+    assert_eq!(98, configure_machine(machine)); // unconfirmed
+}
+
+#[ignore]
+#[test]
+fn test_solve_2_25() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[25]);
+    let machine = row_echelon(&machine);
+    assert_eq!(86, configure_machine(machine));
 }

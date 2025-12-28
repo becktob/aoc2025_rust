@@ -1,12 +1,12 @@
 use std::fmt::Debug;
 use std::str::FromStr;
 use std::{iter, vec};
+use crate::p10_linalg;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     if part2 {
-        "WIP".to_string()
-        //solve_2(&input).to_string()
+        p10_linalg::solve_2(&input).to_string()
     } else {
         solve_1(&input).to_string()
     }
