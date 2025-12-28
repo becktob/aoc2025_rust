@@ -1,5 +1,23 @@
-use crate::p10::{ButtonPresses, Machine, all_sequences, parse_machines};
+use crate::p10::{ButtonPresses, EXAMPLE, Machine, all_sequences, parse_machines};
 use std::iter;
+
+fn solve_2(input: &str) -> usize {
+    parse_machines(input)
+        .iter()
+        .map(convert_machine)
+        .map(configure_machine)
+        .sum()
+}
+
+fn configure_machine(machine: MatrixMachine) -> usize {
+    let machine_echelon = row_echelon(&machine);
+    let solutions = solutions(machine_echelon);
+    let minimal_solution = solutions
+        .iter()
+        .min_by_key(|&presses| presses.iter().sum::<usize>())
+        .unwrap();
+    minimal_solution.iter().sum()
+}
 
 #[derive(Debug, Clone)]
 struct MatrixMachine {
@@ -27,7 +45,18 @@ fn convert_machine(machine: &Machine) -> MatrixMachine {
 
 fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
     if machine.matrix_buttons.len() == 1 {
-        return machine.to_owned();
+        // make sure joltages are positive
+        let signum = machine.vector_jolts[0].signum();
+        let matrix_buttons = machine
+            .matrix_buttons
+            .iter()
+            .map(|row| row.iter().map(|el|el * signum).collect())
+            .collect();
+        let vector_jolts = machine.vector_jolts.iter().map(|&el| el * signum).collect();
+        return MatrixMachine {
+            matrix_buttons,
+            vector_jolts,
+        };
     }
     if machine
         .matrix_buttons
@@ -59,6 +88,13 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
         .enumerate()
         .find_map(|(j, &val)| if val != 0 { Some(j) } else { None })
         .unwrap();
+
+    // make sure joltages are positive
+    let top_row = top_row
+        .iter()
+        .map(|&val| val * top_vec.signum())
+        .collect::<Vec<_>>();
+    let top_vec = top_vec * top_vec.signum();
 
     let mut rem_vec = vector.clone();
     rem_vec.remove(i_row_with_leftmost_entry);
@@ -135,7 +171,6 @@ fn trim_zero_rows(machine: &MatrixMachine) -> MatrixMachine {
 }
 
 fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
-    // Todo: recursion
     let max_n_presses = *machine.vector_jolts.iter().max().unwrap(); // Todo: not correct if matrix has negative coefficients, use original machine's joltages
 
     let i_this_row = machine.matrix_buttons.len() - 1;
@@ -145,6 +180,17 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
         .iter()
         .filter(|&el| *el != 0)
         .collect::<Vec<_>>();
+
+    if nonzero_this_row.len() == 0 && this_joltage != 0 {
+        return vec![];
+    }
+    if nonzero_this_row.len() == 0 && this_joltage == 0 {
+        let trimmed_machine = MatrixMachine {
+            matrix_buttons: machine.matrix_buttons[0..i_this_row].to_vec(),
+            vector_jolts: machine.vector_jolts[0..i_this_row].to_owned(),
+        };
+        return solutions(trimmed_machine);
+    }
 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
@@ -193,7 +239,7 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
 
             let jolts_this_press = machine.matrix_buttons.iter().map(|row| {
                 row.iter()
-                    .zip(presses)
+                    .zip(presses.iter())
                     .map(|(&m, &p)| m * p as i32)
                     .sum::<i32>()
             });
@@ -207,10 +253,23 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
                 matrix_buttons: rem_matrix.clone(),
                 vector_jolts: rem_jolts,
             };
-            println!("{:?} -> {:?}", presses, remaining_machine);
             solutions(remaining_machine)
-                .iter()
-                .map(|rem_solution| rem_solution.iter().chain(presses_this_row.iter()).collect())
+                .into_iter()
+                .map(|rem_solution| {
+                    //rem_solution.iter().chain(presses.iter()).cloned().collect())
+                    let mut rem_iter = rem_solution.into_iter();
+                    presses
+                        .iter()
+                        .zip(this_row.iter())
+                        .map(|(&this_press, &el)| {
+                            if el != 0 {
+                                this_press
+                            } else {
+                                rem_iter.next().unwrap()
+                            }
+                        })
+                        .collect()
+                })
         })
         .collect()
 }
@@ -284,13 +343,13 @@ fn test_row_echelon_example_2() {
         vec![
             vec![1, 1, 1, 0],
             vec![0, -1, 0, 1],
-            vec![0, 0, -1, 0],
+            vec![0, 0, 1, 0],
             vec![0, 0, 0, 0],
             vec![0, 0, 0, 0],
             vec![0, 0, 0, 0]
         ]
     );
-    assert_eq!(row_ech.vector_jolts, vec![10, 1, -5, 0, 0, 0]) // not verified, three zeros are plausible.
+    assert_eq!(row_ech.vector_jolts, vec![10, 1, 5, 0, 0, 0]) // not verified, three zeros are plausible.
 }
 
 #[test]
@@ -301,6 +360,15 @@ fn test_trim_zero_rows() {
     let trimmed_machine = trim_zero_rows(&row_ech);
     assert_eq!(trimmed_machine.matrix_buttons.len(), 3);
     assert_eq!(trimmed_machine.vector_jolts.len(), 3);
+}
+
+#[test]
+fn test_solutions_one_button_machine() {
+    let machine = MatrixMachine {
+        matrix_buttons: vec![vec![1]],
+        vector_jolts: vec![7],
+    };
+    assert_eq!(solutions(machine), vec![vec![7],]);
 }
 
 #[test]
@@ -327,4 +395,49 @@ fn test_solutions_three_button_machine() {
         // implementation might change order
         vec![vec![6, 3, 0,], vec![7, 2, 1], vec![8, 1, 2], vec![9, 0, 3],]
     );
+}
+
+#[test]
+fn test_known_solution() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[0]);
+    let machine = row_echelon(&machine);
+
+    let known_solution = vec![1, 3, 0, 3, 1, 2];
+    let solutions = solutions(machine);
+    assert!(solutions.contains(&known_solution));
+}
+#[test]
+fn test_configure_machine_0() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[0]);
+    assert_eq!(10, configure_machine(machine))
+}
+
+#[test]
+fn test_configure_machine_2() {
+    let machines = parse_machines(crate::p10::EXAMPLE);
+    let machine = convert_machine(&machines[1]);
+    assert_eq!(12, configure_machine(machine))
+}
+
+#[test]
+fn solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 33);
+}
+
+#[test]
+fn test_solve_2_time() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[23]);
+    assert_eq!(86, configure_machine(machine)); // unconfirmed
+}
+
+#[test]
+fn test_solve_2_0() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[0]);
+    assert_eq!(98, configure_machine(machine));  // unconfirmed
 }
