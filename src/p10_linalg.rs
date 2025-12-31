@@ -57,7 +57,7 @@ fn row_echelon(machine: &MatrixMachine) -> MatrixMachine {
         let matrix_buttons = machine
             .matrix_buttons
             .iter()
-            .map(|row| row.iter().map(|el|el * signum).collect())
+            .map(|row| row.iter().map(|el| el * signum).collect())
             .collect();
         let vector_jolts = machine.vector_jolts.iter().map(|&el| el * signum).collect();
         return MatrixMachine {
@@ -198,30 +198,8 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
         };
         return solutions(trimmed_machine);
     }
-    
-    println!("{:?} -> {:?} ({:?})", this_row, this_joltage, max_n_presses);
 
-    let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
-        presses
-            .iter()
-            .zip(this_row.iter())
-            .map(|(&p, &el)| p as i32 * el)
-            .sum::<i32>()
-            == this_joltage
-    };
-    let presses_this_row = (0..=max_n_presses)
-        .flat_map(|n_presses| all_sequences(nonzero_this_row.len(), n_presses as usize))
-        .map(|nonzero_presses| {
-            // expand with zeros to row length
-            let mut iter = nonzero_presses.into_iter();
-            machine.matrix_buttons[i_this_row]
-                .iter()
-                .map(|&el| if el == 0 { 0 } else { iter.next().unwrap() })
-                .collect()
-        })
-        .into_iter()
-        .filter(presses_add_up_to_this_joltage)
-        .collect::<Vec<_>>();
+    let presses_this_row = combinations_single_row(max_n_presses, &this_row, this_joltage);
 
     if i_this_row == 0 {
         return presses_this_row;
@@ -281,6 +259,34 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
                 })
         })
         .collect()
+}
+
+fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> Vec<ButtonPresses> {
+    let nonzero_this_row = row.iter().filter(|&el| *el != 0).collect::<Vec<_>>();
+
+    println!("{:?} -> {:?} ({:?})", row, joltage, max_n_presses);
+
+    let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
+        presses
+            .iter()
+            .zip(row.iter())
+            .map(|(&p, &el)| p as i32 * el)
+            .sum::<i32>()
+            == joltage
+    };
+    let presses_this_row = (0..=max_n_presses)
+        .flat_map(|n_presses| all_sequences(nonzero_this_row.len(), n_presses as usize))
+        .map(|nonzero_presses| {
+            // expand with zeros to row length
+            let mut iter = nonzero_presses.into_iter();
+            row.iter()
+                .map(|&el| if el == 0 { 0 } else { iter.next().unwrap() })
+                .collect()
+        })
+        .into_iter()
+        .filter(presses_add_up_to_this_joltage)
+        .collect::<Vec<_>>();
+    presses_this_row
 }
 
 #[test]
