@@ -282,6 +282,16 @@ fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> 
         return vec![];
     }
 
+    if nonzero_this_row.len() == 1 {
+        let el = nonzero_this_row[0];
+        return if joltage % el != 0 {
+            vec![]
+        } else {
+            let presses = expand_to_row_length(vec![(joltage / el) as usize]);
+            vec![presses]
+        };
+    }
+
     let row_all_positive = nonzero_this_row.iter().all(|el| *el >= 0);
     let max_n_presses = if row_all_positive {
         joltage
