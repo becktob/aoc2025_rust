@@ -262,15 +262,21 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
 }
 
 fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> Vec<ButtonPresses> {
-    let nonzero_this_row = row.iter().filter(|&el| *el != 0).collect::<Vec<_>>();
+    // flip signs to make joltage positive
+    let flip = if joltage < 0 { -1 } else { 1 }; // joltage.signum() = 0 for joltage == 0; can't use that.
+    let nonzero_this_row = row
+        .iter()
+        .map(|&el| el * flip)
+        .filter_map(|el| if el != 0 { Some(el) } else { None })
+        .collect::<Vec<_>>();
+    let joltage = joltage * flip;
 
-    let row_all_positive = row.iter().all(|el| *el >= 0);
-    let joltage_positive = joltage >= 0;
-    if row_all_positive && !joltage_positive {
+    if nonzero_this_row.iter().all(|el| *el < 0) {
         return vec![];
     }
 
-    let max_n_presses = if row_all_positive && joltage_positive {
+    let row_all_positive = nonzero_this_row.iter().all(|el| *el >= 0);
+    let max_n_presses = if row_all_positive {
         joltage
     } else {
         max_n_presses
@@ -296,7 +302,7 @@ fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> 
             // expand with zeros to row length
             let mut iter = nonzero_presses.into_iter();
             row.iter()
-                .map(|&el| if el == 0 { 0 } else { iter.next().unwrap() })
+                .map(|&el| if el != 0 { iter.next().unwrap() } else { 0 })
                 .collect()
         })
         .collect()
