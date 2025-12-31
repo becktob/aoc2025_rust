@@ -269,13 +269,18 @@ fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
             .iter()
-            .zip(row.iter())
+            .zip(nonzero_this_row.iter())
             .map(|(&p, &el)| p as i32 * el)
             .sum::<i32>()
             == joltage
     };
-    let presses_this_row = (0..=max_n_presses)
+    let combinations_nonzero = (0..=max_n_presses)
         .flat_map(|n_presses| all_sequences(nonzero_this_row.len(), n_presses as usize))
+        .filter(presses_add_up_to_this_joltage)
+        .collect::<Vec<_>>();
+
+    combinations_nonzero
+        .into_iter()
         .map(|nonzero_presses| {
             // expand with zeros to row length
             let mut iter = nonzero_presses.into_iter();
@@ -284,9 +289,7 @@ fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> 
                 .collect()
         })
         .into_iter()
-        .filter(presses_add_up_to_this_joltage)
-        .collect::<Vec<_>>();
-    presses_this_row
+        .collect::<Vec<_>>()
 }
 
 #[test]
