@@ -264,7 +264,18 @@ fn solutions(machine: MatrixMachine) -> Vec<ButtonPresses> {
 fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> Vec<ButtonPresses> {
     let nonzero_this_row = row.iter().filter(|&el| *el != 0).collect::<Vec<_>>();
 
-    println!("{:?} -> {:?} ({:?})", row, joltage, max_n_presses);
+    let row_all_positive = row.iter().all(|el| *el >= 0);
+    let joltage_positive = joltage >= 0;
+    if row_all_positive && !joltage_positive {
+        return vec![];
+    }
+
+    let max_n_presses = if row_all_positive && joltage_positive {
+        joltage
+    } else {
+        max_n_presses
+    };
+    println!("{:?} -> {:?} (max: {:?})", row, joltage, max_n_presses);
 
     let presses_add_up_to_this_joltage = |presses: &ButtonPresses| {
         presses
@@ -288,8 +299,7 @@ fn combinations_single_row(max_n_presses: i32, row: &Vec<i32>, joltage: i32) -> 
                 .map(|&el| if el == 0 { 0 } else { iter.next().unwrap() })
                 .collect()
         })
-        .into_iter()
-        .collect::<Vec<_>>()
+        .collect()
 }
 
 #[test]
@@ -460,7 +470,15 @@ fn test_solve_2_0() {
     assert_eq!(98, configure_machine(machine)); // unconfirmed
 }
 
-#[ignore]
+#[test]
+fn test_solve_2_1() {
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let machine = convert_machine(&machines[1]);
+    assert_eq!(210, configure_machine(machine)); // unconfirmed
+}
+
+//#[ignore]
 #[test]
 fn test_solve_2_25() {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
