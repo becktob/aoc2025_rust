@@ -81,33 +81,6 @@ fn all_selections(positions: usize) -> Vec<ButtonPresses> {
         .collect()
 }
 
-#[cfg(test)]
-fn sort_machine(machine: &Machine) -> Machine {
-    // least common lamps first
-    let mut indices = (0..machine.joltage.len()).collect::<Vec<_>>();
-    indices.sort_by_key(|&i| machine.buttons.iter().filter(|&b| b.contains(&i)).count());
-
-    let joltage: Vec<i32> = indices.iter().map(|&i| machine.joltage[i]).collect();
-    let buttons: Vec<Vec<usize>> = machine
-        .buttons
-        .iter()
-        .map(|b| {
-            let mut mapped_buttons = b
-                .iter()
-                .map(|&i| indices.iter().position(|&x| x == i).unwrap())
-                .collect::<Vec<_>>();
-            mapped_buttons.sort();
-            mapped_buttons
-        })
-        .collect();
-
-    Machine {
-        goal: machine.goal.clone(),
-        buttons,
-        joltage,
-    }
-}
-
 pub(crate) fn parse_machines(input: &str) -> Vec<Machine> {
     input.lines().map(parse_machine).collect()
 }
@@ -174,19 +147,7 @@ fn test_result_of_presses() {
     let state = result_of_presses(&vec![0, 1, 0, 1, 0, 2], machine);
     assert_eq!(are_odd(state), machine.goal);
     let solution_state = result_of_presses(&vec![0, 0, 0, 0, 1, 1], machine);
-    assert_eq!(are_odd(solution_state), machine.goal);
-}
-
-#[test]
-fn test_sort_machine() {
-    let machine = Machine {
-        goal: vec![true, false, true],
-        buttons: vec![vec![0, 1, 2], vec![0, 2], vec![0]],
-        joltage: vec![3, 1, 2], // equals number of appearances in buttons
-    };
-    let sorted = sort_machine(&machine);
-    assert_eq!(sorted.joltage, vec![1, 2, 3]);
-    assert_eq!(sorted.buttons, vec![vec![0, 1, 2], vec![1, 2], vec![2]],);
+    assert_eq!(are_odd(&solution_state), machine.goal);
 }
 
 #[test]
