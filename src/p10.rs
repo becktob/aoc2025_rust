@@ -1,6 +1,6 @@
 use std::fmt::Debug;
+use std::iter;
 use std::str::FromStr;
-use std::{iter, vec};
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
@@ -17,7 +17,7 @@ fn solve_1(input: &str) -> usize {
 
     machines
         .iter()
-        .map(configure_machine)
+        .map(shortest_goal_configuration)
         .map(|presses| presses.iter().sum::<usize>())
         .sum()
 }
@@ -31,13 +31,19 @@ pub(crate) struct Machine {
 
 pub(crate) type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
-fn configure_machine(machine: &Machine) -> ButtonPresses {
+fn shortest_goal_configuration(machine: &Machine) -> ButtonPresses {
+    goal_configurations(machine)
+        .into_iter()
+        .min_by_key(|presses| presses.iter().sum::<usize>())
+        .unwrap()
+}
+
+fn goal_configurations(machine: &Machine) -> Vec<ButtonPresses> {
     // optimal part 1 solution has 0 or 1 presses per button: 2 presses cancel out
     all_selections(machine.buttons.len())
         .into_iter()
         .filter(|presses| are_odd(result_of_presses(presses, machine)) == machine.goal)
-        .min_by_key(|presses| presses.iter().sum::<usize>())
-        .unwrap()
+        .collect()
 }
 
 fn are_odd(state: Vec<u32>) -> Vec<bool> {
@@ -151,9 +157,9 @@ fn test_parse_machines() {
 }
 
 #[test]
-fn test_configure_machine() {
+fn test_shortest_goal_configuration() {
     let machine = &parse_machines(EXAMPLE)[0];
-    let buttons_presses = configure_machine(machine).iter().sum::<usize>();
+    let buttons_presses = shortest_goal_configuration(machine).iter().sum::<usize>();
     assert_eq!(buttons_presses, 2);
 }
 
