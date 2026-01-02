@@ -32,12 +32,11 @@ pub(crate) struct Machine {
 pub(crate) type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
 fn configure_machine(machine: &Machine) -> ButtonPresses {
-    let n_buttons = machine.buttons.len();
-    (0..)
-        .flat_map(|n_presses| {
-            (0..n_presses).flat_map(|n_pressed| all_sequences(n_buttons, n_pressed))
-        })
-        .find(|presses| are_odd(result_of_presses(presses, machine)) == machine.goal)
+    // optimal part 1 solution has 0 or 1 presses per button: 2 presses cancel out
+    all_selections(machine.buttons.len())
+        .into_iter()
+        .filter(|presses| are_odd(result_of_presses(presses, machine)) == machine.goal)
+        .min_by_key(|presses| presses.iter().sum::<usize>())
         .unwrap()
 }
 
@@ -58,22 +57,22 @@ fn result_of_presses(presses: &ButtonPresses, machine: &Machine) -> Vec<u32> {
     )
 }
 
-pub(crate) fn all_sequences(positions: usize, sum: usize) -> Vec<ButtonPresses> {
-    // todo: return Impl Iterator here?
+fn all_selections(positions: usize) -> Vec<ButtonPresses> {
+    // all ways to toggle <n> buttons, i.e. 0 or 1 per button
 
-    if positions == 1 {
-        return vec![vec![sum]];
-    }
-    (0..=sum)
-        .flat_map(|times_this_button_pressed| {
-            all_sequences(positions - 1, sum - times_this_button_pressed)
-                .into_iter()
-                .map(move |mut others| {
-                    others.push(times_this_button_pressed);
-                    others
+    (0..2usize.pow(positions as u32))
+        .map(|n| {
+            (0..positions)
+                .map(|p| {
+                    if (2usize.pow(p as u32) & n) != 0 {
+                        1
+                    } else {
+                        0
+                    }
                 })
+                .collect()
         })
-        .collect::<Vec<_>>()
+        .collect()
 }
 
 #[cfg(test)]
@@ -159,8 +158,8 @@ fn test_configure_machine() {
 }
 
 #[test]
-fn test_all_sequences() {
-    assert_eq!(all_sequences(2, 2), vec![[2, 0], [1, 1], [0, 2]]);
+fn test_all_selections() {
+    assert_eq!(all_selections(2), vec![[0, 0], [1, 0], [0, 1], [1, 1]]);
 }
 
 #[test]
