@@ -22,6 +22,12 @@ fn solve_1(input: &str) -> usize {
         .sum()
 }
 
+fn solve_2(input: &str) -> usize {
+    let machines = parse_machines(input);
+
+    machines.iter().map(best_configuration).sum()
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct Machine {
     goal: Vec<bool>,
@@ -31,7 +37,14 @@ pub(crate) struct Machine {
 
 pub(crate) type ButtonPresses = Vec<usize>; // len == buttons.len; How often is button[i] pushed?
 
-fn configure_joltage(machine: Machine) -> Vec<ButtonPresses> {
+fn best_configuration(machine: &Machine) -> usize {
+    configure_joltage(machine)
+        .into_iter()
+        .map(|solution| solution.iter().sum())
+        .min()
+        .unwrap()
+}
+fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
     // TODO: how to test recursion, i.e. "this call leads to correct recurring call"?
     if machine.joltage.iter().all(|&j| j == 0) {
         let no_presses = iter::repeat_n(0usize, machine.buttons.len()).collect();
@@ -78,7 +91,7 @@ fn configure_joltage(machine: Machine) -> Vec<ButtonPresses> {
                 buttons: even_machine.buttons,
                 joltage: even_machine.joltage.iter().map(|&j| j / 2).collect(),
             };
-            let half_machine_solutions = configure_joltage(half_machine);
+            let half_machine_solutions = configure_joltage(&half_machine);
             let even_machine_solutions = half_machine_solutions
                 .into_iter()
                 .map(|ps| ps.into_iter().map(|p| p * 2).collect::<ButtonPresses>())
@@ -223,7 +236,7 @@ fn test_configure_joltage_single_press() {
         buttons: vec![vec![0]],
         joltage: vec![1],
     };
-    let solutions = configure_joltage(machine);
+    let solutions = configure_joltage(&machine);
     assert_eq!(solutions, vec![vec![1]]);
 }
 
@@ -234,7 +247,7 @@ fn test_configure_joltage_two_presses() {
         buttons: vec![vec![0]],
         joltage: vec![2],
     };
-    let solutions = configure_joltage(machine);
+    let solutions = configure_joltage(&machine);
     assert_eq!(solutions, vec![vec![2]]);
 }
 
@@ -245,14 +258,14 @@ fn test_configure_joltage_two_buttons_two_presses() {
         buttons: vec![vec![0, 1], vec![0]],
         joltage: vec![2, 1],
     };
-    let solutions = configure_joltage(machine);
+    let solutions = configure_joltage(&machine);
     assert_eq!(solutions, vec![vec![1, 1]]);
 }
 
 #[test]
 fn test_configure_joltage_example_0() {
     let machines = parse_machines(EXAMPLE);
-    let solutions = configure_joltage(machines[0].clone());
+    let solutions = configure_joltage(&machines[0]);
     let known_solution = vec![1, 3, 0, 3, 1, 2];
     assert!(solutions.contains(&known_solution));
 }
@@ -265,4 +278,9 @@ fn solve_1_example() {
 #[test]
 fn test_solve_1() {
     assert_eq!(solve(false), "477");
+}
+
+#[test]
+fn solve_2_example() {
+    assert_eq!(solve_2(EXAMPLE), 33);
 }
