@@ -1,6 +1,9 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
+use std::hash::{BuildHasherDefault, DefaultHasher};
 use std::iter;
 use std::str::FromStr;
+use std::sync::Mutex;
 
 pub fn solve(part2: bool) -> String {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
@@ -27,7 +30,7 @@ fn solve_2(input: &str) -> usize {
     machines.iter().map(best_configuration).sum()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Machine {
     goal: Vec<bool>,
     pub(crate) buttons: Vec<Vec<usize>>,
@@ -43,7 +46,24 @@ fn best_configuration(machine: &Machine) -> usize {
         .min()
         .unwrap()
 }
+
+static CONFIGURE_CACHE: Mutex<
+    HashMap<Machine, Vec<ButtonPresses>, BuildHasherDefault<DefaultHasher>>,
+> = Mutex::new(HashMap::with_hasher(BuildHasherDefault::new()));
 fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
+    if let Some(cache_val) = CONFIGURE_CACHE.lock().unwrap().get(machine) {
+        cache_val.clone()
+    } else {
+        let val = configure_joltage_compute(machine);
+        CONFIGURE_CACHE
+            .lock()
+            .unwrap()
+            .insert(machine.clone(), val.clone());
+        val
+    }
+}
+
+fn configure_joltage_compute(machine: &Machine) -> Vec<ButtonPresses> {
     // TODO: how to test recursion, i.e. "this call leads to correct recurring call"?
     if machine.joltage.iter().all(|&j| j == 0) {
         let no_presses = iter::repeat_n(0usize, machine.buttons.len()).collect();
