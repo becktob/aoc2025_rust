@@ -57,7 +57,8 @@ fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
     };
 
     let parity_configurations = goal_configurations(&parity_machine);
-    let parity_configurations = parity_configurations
+
+    parity_configurations
         .iter()
         .filter(|&presses| {
             result_of_presses(presses, &machine) // todo: compute result_of_presses() only once
@@ -65,19 +66,15 @@ fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
                 .zip(machine.joltage.iter())
                 .all(|(r, j)| r <= j)
         })
-        .collect::<Vec<_>>();
-
-    parity_configurations
-        .iter()
         .flat_map(|parity_configuration| {
             // IDEA: subtract parity, recurse on "halved" machine
             let pressed_joltages = result_of_presses(parity_configuration, &machine);
-            let even_joltage =  machine
-                    .joltage
-                    .iter()
-                    .zip(pressed_joltages.iter())
-                    .map(|(j, p)| j - p)
-                    .collect::<Vec<_>>();
+            let even_joltage = machine
+                .joltage
+                .iter()
+                .zip(pressed_joltages.iter())
+                .map(|(j, p)| j - p)
+                .collect::<Vec<_>>();
             let half_machine = Machine {
                 goal: machine.goal.clone(),
                 buttons: machine.buttons.clone(),
