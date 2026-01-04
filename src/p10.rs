@@ -81,20 +81,16 @@ fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
                 joltage: even_joltage.iter().map(|&j| j / 2).collect(),
             };
             let half_machine_solutions = configure_joltage(&half_machine);
-            let even_machine_solutions = half_machine_solutions
-                .into_iter()
-                .map(|ps| ps.into_iter().map(|p| p * 2).collect::<ButtonPresses>())
-                .collect::<Vec<_>>();
 
-            even_machine_solutions
+            half_machine_solutions
                 .iter()
                 .map(move |even| {
                     even.iter()
                         .zip(parity_configuration.iter())
-                        .map(|(e, o)| e + o)
-                        .collect::<ButtonPresses>()
+                        .map(|(half, odd)| 2 * half + odd)
+                        .collect()
                 })
-                .collect::<Vec<_>>()
+                .collect::<Vec<ButtonPresses>>()
         })
         .collect()
 }
