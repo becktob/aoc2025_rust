@@ -50,10 +50,8 @@ fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
         return vec![no_presses];
     }
 
-    let parity_goal = are_odd(&machine.joltage);
-
     let parity_machine = Machine {
-        goal: parity_goal,
+        goal: are_odd(&machine.joltage),
         buttons: machine.buttons.clone(),
         joltage: machine.joltage.clone(),
     };
@@ -74,21 +72,16 @@ fn configure_joltage(machine: &Machine) -> Vec<ButtonPresses> {
         .flat_map(|parity_configuration| {
             // IDEA: subtract parity, recurse on "halved" machine
             let pressed_joltages = result_of_presses(parity_configuration, &machine);
-            let even_machine = Machine {
-                goal: iter::repeat_n(false, machine.goal.len()).collect(),
-                buttons: machine.buttons.clone(),
-                joltage: machine
+            let even_joltage =  machine
                     .joltage
                     .iter()
                     .zip(pressed_joltages.iter())
                     .map(|(j, p)| j - p)
-                    .collect(),
-            };
-            // TODO: don't need entire machine, only joltage changes
+                    .collect::<Vec<_>>();
             let half_machine = Machine {
-                goal: even_machine.goal,
-                buttons: even_machine.buttons,
-                joltage: even_machine.joltage.iter().map(|&j| j / 2).collect(),
+                goal: machine.goal.clone(),
+                buttons: machine.buttons.clone(),
+                joltage: even_joltage.iter().map(|&j| j / 2).collect(),
             };
             let half_machine_solutions = configure_joltage(&half_machine);
             let even_machine_solutions = half_machine_solutions
@@ -285,14 +278,14 @@ fn test_solve_2_example() {
 }
 
 #[test]
-fn test_solve_2_0_time(){
+fn test_solve_2_25_time() {
     let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
     let machines = parse_machines(&input);
-    let solution = shortest_goal_configuration(&machines[25]);
-    assert_eq!(13, solution.iter().sum::<usize>());
+    let solution = best_configuration(&machines[25]);
+    assert_eq!(225, solution);
 }
 
 #[test]
-fn test_solve_2(){
+fn test_solve_2() {
     assert_eq!(solve(true), "17970");
 }
