@@ -285,6 +285,14 @@ fn test_solve_2_example() {
 }
 
 #[test]
+fn test_solve_2_0_time(){
+    let input = std::fs::read_to_string("input_10.txt").expect("could not read file");
+    let machines = parse_machines(&input);
+    let solution = shortest_goal_configuration(&machines[25]);
+    assert_eq!(13, solution.iter().sum::<usize>());
+}
+
+#[test]
 fn test_solve_2(){
     assert_eq!(solve(true), "17970");
 }
